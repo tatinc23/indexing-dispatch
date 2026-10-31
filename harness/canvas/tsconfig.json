@@ -1,0 +1,4 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["../../views/**/*", "./**/*", "../../mcp-env.d.ts", "../../test/canvas-lib.test.ts"]
+}

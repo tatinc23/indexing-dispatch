@@ -1,0 +1,7 @@
+{
+  // Static assets Worker for the public page (dist-site/ is built by scripts/build-site.mjs, allowlist only).
+  "name": "indexing-dispatch",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "../../dist-site" },
+  "routes": [{ "pattern": "dispatch.tatinc.us", "custom_domain": true }]
+}

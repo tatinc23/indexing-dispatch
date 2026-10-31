@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indexing Dispatch | TAT Inc</title>
+<meta name="description" content="A free tool for your website. Paste your link, copy a ready-made prompt, drop it in Claude, ChatGPT or Cursor. It tells Brave Search about your page, checks if your site is easy for AI to read, and pings IndexNow (Bing, Yandex, Naver and more).">
+<meta name="theme-color" content="#0C0C0C">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="{{SITE_URL}}/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Indexing Dispatch">
+<meta property="og:title" content="Indexing Dispatch">
+<meta property="og:description" content="Free: tell search engines your page exists, and see what each one said.">
+<meta property="og:url" content="{{SITE_URL}}/">
+<meta property="og:image" content="{{SITE_URL}}/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Indexing Dispatch logo: a bracket with a green arrow pointing out of it">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Indexing Dispatch">
+<meta name="twitter:description" content="Free: tell search engines your page exists, and see what each one said.">
+<meta name="twitter:image" content="{{SITE_URL}}/og.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="favicon-180.png">
+<link rel="preload" href="assets/fonts/kanit-900-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Indexing Dispatch","url":"{{SITE_URL}}/","description":"A free tool you plug into your AI app. It sends a page to Brave Search, checks how ready your site is for AI, and pings IndexNow, then tells you what each one actually said.","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"applicationCategory":"DeveloperApplication","operatingSystem":"Any","publisher":{"@type":"Organization","name":"TAT Inc","url":"https://tatinc.us/"}}</script>
+</head>
+<body id="top">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <a class="mark" href="#top"><svg xmlns="http://www.w3.org/2000/svg" viewBox="633.1 595.1 859.6 859.6" class="logo" aria-hidden="true" focusable="false"><path fill="#e4e4e7" d="M 693.61 646.984 L 992.653 646.976 C 992.435 675.653 992.386 704.331 992.507 733.008 L 783.459 733.027 C 782.148 796.596 783.355 864.286 783.325 928.276 L 783.202 1317.74 L 866.5 1317.94 L 992.764 1317.91 L 992.472 1402.75 L 693.702 1402.87 L 693.61 646.984 z"/><path fill="#8ee476" d="M 1159.12 756.668 C 1165.38 759.515 1226.23 821.865 1235.82 831.345 L 1432.29 1025.3 C 1422.4 1034.33 1412.54 1043.5 1403.18 1053.09 C 1323.67 1134.51 1240.12 1212.98 1161.24 1294.91 C 1139.02 1272.51 1116.71 1252.53 1094.1 1230.75 C 1105.43 1218.94 1120.29 1205.42 1132.25 1193.85 L 1187.69 1139.44 C 1210.9 1117.17 1234.45 1093.78 1257.26 1071.12 L 896.961 1070.94 L 896.976 978.417 L 1258.4 978.595 C 1245.7 963.877 1221.18 942.394 1206.17 927.669 C 1169.45 891.638 1131.25 856.373 1094.59 820.233 C 1115.36 798.937 1137.81 777.623 1159.12 756.668 z"/></svg><span>Indexing Dispatch</span></a>
+  <nav aria-label="Page">
+    <a href="#try">Try it</a>
+    <a href="#indexnow">What&rsquo;s IndexNow?</a>
+    <a href="#connect">Plug it in</a>
+    <a href="#privacy">Privacy</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <section class="hero" id="try" aria-labelledby="title">
+    <p class="eyebrow">Free &middot; no sign-up &middot; about a minute</p>
+    <h1 id="title" class="gtype">Get your site found.</h1>
+    <p class="lede">Tell Brave and Bing your page exists, see if AI can read your site, and get a straight answer on what each one said. Paste your link, copy the prompt, drop it in Claude or ChatGPT.</p>
+
+    <form class="go" id="go" aria-labelledby="go-h" novalidate hidden>
+      <h2 id="go-h" class="sr-only">Make your prompt</h2>
+      <label for="page-url">Your website link</label>
+      <div class="go-row">
+        <input id="page-url" type="url" inputmode="url" autocomplete="url" spellcheck="false" placeholder="yourbusiness.com" aria-describedby="url-hint">
+        <button type="submit" class="pill big">Copy my prompt</button>
+      </div>
+      <p class="hint" id="url-hint">Any page works. Your homepage is a great start.</p>
+      <fieldset class="choices">
+        <legend>What should your AI do?</legend>
+        <label><input type="radio" name="what" value="both" checked><span>Check my site, then send it to Brave</span></label>
+        <label><input type="radio" name="what" value="brave"><span>Just send it to Brave</span></label>
+        <label><input type="radio" name="what" value="indexnow"><span>Set me up with IndexNow</span></label>
+      </fieldset>
+      <p class="next" id="next">Next: paste it into your AI. First time? <a href="#connect">Plug it in once</a> (a minute, no sign-in).</p>
+    </form>
+
+    <details class="peek" id="peek" open>
+      <summary>See the prompt</summary>
+      <figure class="ticket">
+        <div class="ticket-bar">
+          <figcaption id="prompt-cap">Check my site, then send it to Brave</figcaption>
+          <button type="button" class="pill" data-copy-prompt hidden>Copy prompt</button>
+        </div>
+        <pre class="prompt" id="prompt-both" data-variant="both" data-cap="Check my site, then send it to Brave" tabindex="0" aria-labelledby="prompt-cap">Please check my website, then send its main page to Brave Search.
+
+Use the brave-submitter connector (MCP server: {{MCP_URL}}). My main page is:
+
+<span class="slot">[paste your page address here]</span>
+
+Do these in order:
+1. Call the tool audit-site once with targetUrl set to that address. It only reads; it changes nothing.
+2. Summarise what it found, and list any drafted files it returned (llms.txt, JSON-LD, robots.txt lines) so I can review them. Say they are drafts.
+3. Then call the tool submit-brave-url one time with the same address. It usually takes 10 to 40 seconds. Wait for the result.
+
+Rules:
+- Report each tool's status and message word for word. If either tool returns an errorCode or retryAfterSeconds, include them.
+- "accepted" means Brave confirmed it got the URL. It doesn't mean the page is indexed. Never say or imply it is, or will be, indexed.
+- Don't retry either tool, even if it fails or times out. If a result says to stop, stop.
+- If you don't have audit-site or submit-brave-url, tell me which one is missing and stop. Don't say you ran anything you didn't.</pre>
+        <pre class="prompt" id="prompt-brave" data-variant="brave" data-cap="Just send it to Brave" tabindex="0" aria-labelledby="prompt-cap">Please send one page of my website to Brave Search for me.
+
+Use the brave-submitter connector (MCP server: {{MCP_URL}}). Call its tool submit-brave-url one time, with targetUrl set to:
+
+<span class="slot">[paste your page address here]</span>
+
+How to do it:
+- Call the tool once. Don't retry, even if it times out.
+- It usually takes 10 to 40 seconds. Wait for the result.
+- Tell me the status it returned and Brave's message, word for word. If there's a confirmationText, show me that too.
+- "accepted" means Brave confirmed it got the URL. It doesn't mean the page is indexed yet. Say that plainly.
+- For any other status, tell me which one, include the errorCode and retryAfterSeconds if there are any, and tell me I can also submit it myself at https://search.brave.com/submit-url
+- If you don't have the submit-brave-url tool, tell me and stop. Don't say you submitted anything.</pre>
+        <pre class="prompt" id="prompt-indexnow" data-variant="indexnow" data-cap="Set me up with IndexNow" tabindex="0" aria-labelledby="prompt-cap">Please help me tell search engines about my website using IndexNow.
+
+Use the brave-submitter connector (MCP server: {{MCP_URL}}). My website's address is:
+
+<span class="slot">[paste your page address here]</span>
+
+Do these in order:
+1. Call the tool audit-site once with targetUrl set to that address. Tell me in a few plain sentences what it found.
+2. In two plain sentences, explain what IndexNow is. Then make me an IndexNow key: a random string of 8 to 128 letters, numbers and dashes. Tell me to save it as a plain text file named <key>.txt in the top folder of my website, containing only the key, so it opens at https://<my host>/<key>.txt. Then wait until I tell you the file is live.
+3. When I say it's live, ask me which page addresses are new or changed (up to 100, all on my site). Then call the tool submit-indexnow once with my host, the key and those addresses.
+
+Rules:
+- Report the tool's status and message word for word. If it says rejected, include the HTTP status and tell me I can try again later.
+- "submitted" means the search engine received the request. It doesn't mean the pages are indexed. Never say or imply that.
+- Don't retry, even if it fails. Don't resubmit pages that haven't changed.
+- If you don't have the submit-indexnow tool, tell me and stop. Don't say you sent anything.</pre>
+      </figure>
+    </details>
+    <noscript><p class="who">JavaScript is off, so copy the prompt above by hand and swap the bracketed part for your website link.</p></noscript>
+  </section>
+
+  <section id="indexnow" aria-labelledby="indexnow-h">
+    <p class="kicker">Worth two minutes</p>
+    <h2 id="indexnow-h">Wait, what&rsquo;s IndexNow?</h2>
+    <p class="sec-lede big-lede">It&rsquo;s a way to <b>knock on the search engines&rsquo; door</b> instead of waiting for them to find you.</p>
+    <p class="sec-lede">Normally a search engine finds your new page when its bots happen to wander by. IndexNow flips that: the moment you add or change a page, you send one tiny message that says &ldquo;hey, this one&rsquo;s new.&rdquo; It&rsquo;s an open protocol backed by Microsoft (Bing), Yandex and Seznam, and engines like Naver and Yep take part too.</p>
+
+    <ul class="cards">
+      <li>
+        <h3>You make the first move</h3>
+        <p>New product, new menu, a blog post, updated hours? You tell them right away instead of hoping a bot shows up.</p>
+      </li>
+      <li>
+        <h3>Tell one, tell them all</h3>
+        <p>Send it once and it&rsquo;s shared with every engine in the program. No signing up with each one.</p>
+      </li>
+      <li>
+        <h3>One tiny file proves it&rsquo;s yours</h3>
+        <p>You put a short text file (a key) on your site. The engines check it to know you&rsquo;re the owner. We check it first, so nothing goes out if it&rsquo;s missing.</p>
+      </li>
+    </ul>
+
+    <p class="fact">Here&rsquo;s the honest part: a ping asks engines to come take a look. They decide if and when a page gets indexed, and nobody can promise rankings, us included. What you get is a direct way to say &ldquo;I&rsquo;m here,&rdquo; plus a straight answer on what came back.</p>
+    <p class="sec-lede"><a class="cta" href="#try">Try it with your link</a></p>
+  </section>
+
+  <section id="connect" aria-labelledby="connect-h">
+    <h2 id="connect-h">Plug it in (once)</h2>
+    <p class="sec-lede">Your AI needs to know we exist. It takes about a minute, there&rsquo;s no sign-in, and you only do it once. Pick your app below and paste this address in:</p>
+    <div class="endpoint"><code id="server-url">{{MCP_URL}}</code><button type="button" class="copy-snip" data-copy="server-url" hidden aria-label="Copy server address">Copy</button></div>
+
+    <div class="apps">
+      <details class="app" open>
+        <summary><h3>Claude</h3><span class="where">claude.ai, Claude Desktop, Claude Code</span></summary>
+        <div class="app-body">
+          <ol>
+            <li>Open <b>Customize</b>, then <b>Connectors</b>.</li>
+            <li>Click <b>+ Add</b>, then <b>Add custom connector</b>.</li>
+            <li>Name it <b>brave-submitter</b>, paste the server address, click <b>Continue</b>.</li>
+            <li>Under <b>Authentication</b>, choose <b>No sign in</b>, then click <b>Add</b>.</li>
+            <li>In a chat, click <b>+</b> (lower left), open <b>Connectors</b> and switch brave-submitter on.</li>
+          </ol>
+          <p class="note">Team or Enterprise: an owner adds it under <b>Organization settings</b>, <b>Connectors</b>, then each person clicks <b>Connect</b>. The no-cost plan allows one custom connector.</p>
+          <p class="note">Claude Code:</p>
+          <div class="snip"><div class="snip-bar"><span id="snip-claude-l">Terminal</span><button type="button" class="copy-snip" data-copy="snip-claude" hidden aria-describedby="snip-claude-l">Copy</button></div><pre id="snip-claude" tabindex="0" aria-labelledby="snip-claude-l"><code>claude mcp add --transport http brave-submitter {{MCP_URL}}</code></pre></div>
+          <p class="src"><a href="https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp">Anthropic&rsquo;s guide</a></p>
+        </div>
+      </details>
+
+      <details class="app">
+        <summary><h3>Codex</h3><span class="where">ChatGPT desktop app, IDE extension, CLI</span></summary>
+        <div class="app-body">
+          <p class="note">The ChatGPT desktop app, the Codex IDE extension and the Codex CLI share one setup, so adding it in one place covers all three.</p>
+          <p class="note"><b>ChatGPT desktop app:</b> <b>Settings</b>, <b>MCP servers</b>, <b>Add server</b>. Name it brave-submitter, choose <b>Streamable HTTP</b>, paste the server address, save, then <b>Restart</b>. Type <code>/mcp</code> in the message box to see it listed.</p>
+          <p class="note"><b>IDE extension:</b> gear menu, <b>MCP servers</b>, <b>Add server</b>. Same fields, save, then <b>Restart extension</b>.</p>
+          <p class="note"><b>CLI:</b> run this, then <code>codex mcp list</code> to check it&rsquo;s there.</p>
+          <div class="snip"><div class="snip-bar"><span id="snip-codex-l">Terminal</span><button type="button" class="copy-snip" data-copy="snip-codex" hidden aria-describedby="snip-codex-l">Copy</button></div><pre id="snip-codex" tabindex="0" aria-labelledby="snip-codex-l"><code>codex mcp add brave-submitter --url {{MCP_URL}}</code></pre></div>
+          <p class="note"><b>Or edit the config file</b> <code>~/.codex/config.toml</code> (or <code>.codex/config.toml</code> in a trusted project):</p>
+          <div class="snip"><div class="snip-bar"><span id="snip-toml-l">config.toml</span><button type="button" class="copy-snip" data-copy="snip-toml" hidden aria-describedby="snip-toml-l">Copy</button></div><pre id="snip-toml" tabindex="0" aria-labelledby="snip-toml-l"><code>[mcp_servers.brave-submitter]
+url = "{{MCP_URL}}"</code></pre></div>
+          <p class="src"><a href="https://learn.chatgpt.com/docs/extend/mcp">OpenAI&rsquo;s Codex guide</a></p>
+        </div>
+      </details>
+
+      <details class="app">
+        <summary><h3>Cursor</h3><span class="where">mcp.json</span></summary>
+        <div class="app-body">
+          <p class="note">Add this to <code>~/.cursor/mcp.json</code> to use it in every project, or to <code>.cursor/mcp.json</code> for one project. If the file already has servers, add the brave-submitter entry inside the existing <code>mcpServers</code>.</p>
+          <div class="snip"><div class="snip-bar"><span id="snip-cursor-l">mcp.json</span><button type="button" class="copy-snip" data-copy="snip-cursor" hidden aria-describedby="snip-cursor-l">Copy</button></div><pre id="snip-cursor" tabindex="0" aria-labelledby="snip-cursor-l"><code>{ "mcpServers": { "brave-submitter": { "url": "{{MCP_URL}}" } } }</code></pre></div>
+          <p class="note">You can then turn it on or off from the <b>Customize</b> page in Cursor&rsquo;s sidebar.</p>
+          <p class="src"><a href="https://cursor.com/docs/context/mcp">Cursor&rsquo;s guide</a></p>
+        </div>
+      </details>
+
+      <details class="app">
+        <summary><h3>ChatGPT</h3><span class="where">Web: Business, Enterprise and Edu</span></summary>
+        <div class="app-body">
+          <p class="note">Works on ChatGPT Business, Enterprise and Edu, on the web (not mobile). On Business, an admin or owner adds it. No Developer Mode needed.</p>
+          <ol>
+            <li>Go to <b>Plugins</b>.</li>
+            <li>Select the plus button, then <b>Add custom MCP server</b>.</li>
+            <li>Name it <b>brave-submitter</b>.</li>
+            <li>Under <b>Connection</b>, paste the server address.</li>
+            <li>Leave authentication off.</li>
+            <li>Tick <b>I understand and want to continue</b>.</li>
+            <li>Choose <b>Create as a plugin</b>, then install it.</li>
+            <li>In a new chat, type <b>@</b> and pick brave-submitter.</li>
+          </ol>
+          <p class="note">Pro can only connect read-only servers, and this one submits a form, so Pro can&rsquo;t use it. Use Claude, Codex or Cursor instead, or submit by hand at <a href="https://search.brave.com/submit-url">search.brave.com/submit-url</a>.</p>
+          <p class="src"><a href="https://help.openai.com/en/articles/12584461">OpenAI&rsquo;s guide</a></p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section id="tools" aria-labelledby="tools-h">
+    <h2 id="tools-h">What&rsquo;s in the box</h2>
+    <p class="sec-lede">One connection, four tools, all free. Each one reports what it actually saw, and none of them retries behind your back.</p>
+    <dl class="status">
+      <div><dt>submit-brave-url</dt><dd>Sends one page to Brave Search through Brave&rsquo;s own submit page and tells you exactly what Brave said.</dd></div>
+      <div><dt>audit-site</dt><dd>Reads your page, <code>robots.txt</code>, <code>llms.txt</code> and sitemap, lists what&rsquo;s missing, and drafts the files for you to review. It only reads.</dd></div>
+      <div><dt>submit-indexnow</dt><dd>Pings IndexNow for up to 100 pages on your site. It checks your key file first, then sends one request. IndexNow can answer &ldquo;rejected&rdquo; (HTTP 429, too many requests) when it&rsquo;s busy or limiting shared servers; the tool says so, and you can try again later.</dd></div>
+      <div><dt>render-submission-canvas</dt><dd>Opens a little panel where you paste links, pick tools, run them and copy the results. Needs an app that can show panels.</dd></div>
+    </dl>
+  </section>
+
+  <section id="expect" aria-labelledby="expect-h">
+    <h2 id="expect-h">What you&rsquo;ll get back</h2>
+    <p class="sec-lede">For Brave, you&rsquo;ll get one of these. Plain answers, no spin:</p>
+    <dl class="status">
+      <div class="ok"><dt>accepted</dt><dd>Brave showed &ldquo;Thank you for your submission.&rdquo; Brave has your URL. When it gets indexed is up to Brave.</dd></div>
+      <div><dt>verification_required</dt><dd>Brave wanted a human check. The tool doesn&rsquo;t solve those, so submit that one yourself on Brave&rsquo;s page.</dd></div>
+      <div><dt>rejected</dt><dd>Brave turned the URL down.</dd></div>
+      <div><dt>timeout</dt><dd>Brave didn&rsquo;t give a clear answer within 30 seconds. Check before you send it again.</dd></div>
+      <div><dt>error</dt><dd>Something stopped it on this side, such as the hourly limit or that URL already being sent today. The reason comes with it.</dd></div>
+    </dl>
+    <p class="fact">It handles 12 submissions an hour per server, shared by everyone using it, and sends the same URL at most once every 24 hours.</p>
+  </section>
+
+  <section id="privacy" aria-labelledby="privacy-h">
+    <h2 id="privacy-h">Privacy</h2>
+    <p>For each Brave submission the server keeps one log line: the page address without anything after a <code>?</code>, the result, any error code, and how long it took. Nothing about who sent it, and no request headers. Brave receives the URL you submit, which is the point. The server runs on Cloudflare Workers (the Brave tool uses Cloudflare's browser service), and Cloudflare may keep its own logs. The other tools log only the tool name, the result and timing (IndexNow also logs the host and how many URLs). The audit requests your page and its <code>robots.txt</code>, <code>llms.txt</code> and sitemap, identifying itself as <code>brave-submitter-audit/1.0</code>. This page has no cookies and no analytics.</p>
+  </section>
+
+  <section id="terms" aria-labelledby="terms-h">
+    <h2 id="terms-h">Terms</h2>
+    <p>Indexing Dispatch is not affiliated with Brave. Only submit pages you own or have permission to submit. submit-brave-url uses Brave&rsquo;s public submit form, one URL at a time, and follows <a href="https://brave.com/terms-of-use/">Brave&rsquo;s terms</a>. It doesn&rsquo;t solve CAPTCHAs or get around Brave&rsquo;s checks; it reports <code>verification_required</code> instead. TAT Inc runs the hosted server and can change it or switch it off.</p>
+  </section>
+
+  <section id="support" aria-labelledby="support-h">
+    <h2 id="support-h">Support</h2>
+    <p>Email <a href="mailto:emailme@tatinc.us">emailme@tatinc.us</a>.</p>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <p>Indexing Dispatch by <a href="https://tatinc.us/">TAT Inc</a>. Not affiliated with Brave.</p>
+  <p class="motto">The future belongs to those who play.</p>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"><span class="toast-dot" aria-hidden="true"></span><span id="toast-text"></span></div>
+<script src="js/site.js" defer></script>
+</body>
+</html>

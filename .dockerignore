@@ -1,0 +1,8 @@
+node_modules
+.mcp-use
+.git
+.env*
+test
+docs
+scripts
+*.log

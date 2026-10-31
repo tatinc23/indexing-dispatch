@@ -1,0 +1,29 @@
+{
+  // Indexing Dispatch MCP server on Cloudflare Workers. Build first: node scripts/build-worker.mjs (from the repo root).
+  // Deploy: cd deploy/mcp && CLOUDFLARE_ACCOUNT_ID=<id> npx wrangler@latest deploy
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "dispatch-mcp",
+  "main": "../../src/worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // In-page scripts are strings, but keep esbuild from wrapping functions that puppeteer serializes into the page.
+  "keep_names": false,
+  // mcp-use lazily imports its proxy client, which this server never uses.
+  "alias": { "@mcp-use/client": "./stub-mcp-use-client.js" },
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "dispatch-mcp.tatinc.us", "custom_domain": true }],
+  "browser": { "binding": "BROWSER" },
+  "durable_objects": { "bindings": [{ "name": "LIMITER", "class_name": "BudgetLimiter" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BudgetLimiter"] }],
+  "vars": {
+    "BRAVE_SUBMITTER_ALLOW_PUBLIC": "true",
+    "MCP_URL": "https://dispatch-mcp.tatinc.us",
+    "PUBLIC_PAGE_URL": "https://dispatch.tatinc.us/"
+  },
+  // Caps runaway CPU per request (the measured Brave flow used ~170 ms; audits are a few ms).
+  "limits": { "cpu_ms": 5000 },
+  // Only the server's own console.log lines are kept (they hold no caller data). Invocation logs are off so request
+  // headers and caller IPs are not stored, matching the page's privacy section.
+  "observability": { "enabled": true, "redact_query_string": true, "logs": { "enabled": true, "invocation_logs": false } }
+}

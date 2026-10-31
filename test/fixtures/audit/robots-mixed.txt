@@ -1,0 +1,15 @@
+# comment
+User-agent: *
+Disallow: /private/
+Disallow: /
+
+User-agent: GPTBot
+User-agent: ClaudeBot
+Allow: /
+Disallow: /secret/
+
+User-agent: bingbot
+Disallow: /
+
+Sitemap: https://example.com/sitemap_index.xml
+Sitemap: https://cdn.other.test/sitemap.xml

@@ -1,0 +1,102 @@
+{
+  "label": "baseline-2026-10-31",
+  "takenAt": "2026-10-31T10:22:00.033Z",
+  "window": {
+    "from": "2026-10-24T10:22:00.033Z",
+    "to": "2026-10-31T10:22:00.033Z",
+    "lookbackDays": 7
+  },
+  "zone": {
+    "status": "ok",
+    "windowStart": "2026-10-24T10:22:00.034Z",
+    "windowEnd": "2026-10-31T10:22:00.034Z",
+    "totals": {
+      "requests": 172357,
+      "bytes": 1409627087
+    },
+    "aiBots": [
+      {
+        "name": "ClaudeBot",
+        "requests": 1079
+      },
+      {
+        "name": "OAI-SearchBot",
+        "requests": 400
+      },
+      {
+        "name": "ChatGPT-User",
+        "requests": 298
+      },
+      {
+        "name": "PerplexityBot",
+        "requests": 283
+      },
+      {
+        "name": "GPTBot",
+        "requests": 280
+      },
+      {
+        "name": "Perplexity-User",
+        "requests": 264
+      },
+      {
+        "name": "Claude-SearchBot",
+        "requests": 105
+      },
+      {
+        "name": "Claude-User",
+        "requests": 1
+      }
+    ],
+    "message": "Read from the Cloudflare GraphQL Analytics API for the last 7 day(s). Unique visitors are not shown: daily unique counts overlap and cannot be added. AI-bot counts match crawler names in the user-agent string, which anyone can spoof; they are not verified bots. Bot counts come from Cloudflare's sampled adaptive data, so they are estimates. Crawlers not listed had no matching requests in this window."
+  },
+  "perHost": {
+    "dispatch.tatinc.us": {
+      "requests": 1526,
+      "visits": 90,
+      "aiBots": {
+        "ClaudeBot": 17,
+        "Claude-SearchBot": 14
+      }
+    },
+    "dispatch-mcp.tatinc.us": {
+      "requests": 1468,
+      "visits": 2,
+      "aiBots": {
+        "ClaudeBot": 8,
+        "Claude-SearchBot": 4,
+        "PerplexityBot": 3,
+        "OAI-SearchBot": 2
+      }
+    },
+    "tatinc.us": {
+      "requests": 25267,
+      "visits": 8407,
+      "aiBots": {
+        "OAI-SearchBot": 162,
+        "ClaudeBot": 357,
+        "GPTBot": 124,
+        "Perplexity-User": 105,
+        "PerplexityBot": 81,
+        "ChatGPT-User": 77,
+        "Claude-User": 1
+      }
+    },
+    "shabba.tatinc.us": {
+      "requests": 7470,
+      "visits": 196,
+      "aiBots": {
+        "PerplexityBot": 16,
+        "OAI-SearchBot": 25,
+        "ClaudeBot": 27,
+        "GPTBot": 7,
+        "Perplexity-User": 6,
+        "ChatGPT-User": 5
+      }
+    }
+  },
+  "caveats": [
+    "Source: Cloudflare GraphQL Analytics. Zone totals are the whole tatinc.us zone; per-host numbers are eyeball requests (requestSource=eyeball) from sampled adaptive data, so treat them as estimates.",
+    "AI-bot counts match crawler names in the user-agent string, which can be spoofed; Google-Extended and Brave's crawler have no user-agent token and cannot be counted this way."
+  ]
+}
