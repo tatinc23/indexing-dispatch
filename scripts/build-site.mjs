@@ -22,6 +22,8 @@ const TEXT_EXT = new Set([".html", ".css", ".js", ".txt", ".xml", ".json"]); // 
 const EXTRA_FILES = new Set(["_headers"]); // the one allowed file without an extension
 const SKIP_TOP_DIRS = new Set(["video"]);
 const FORBIDDEN = ["github.com/tatinc23", "CLAUDE.md", "TASKS", "DECISIONS", "op://"];
+// The one org link allowed on the page: the public source repo, exactly (not -private, not a subpath).
+const ALLOWED_REPO_LINK = /https:\/\/github\.com\/tatinc23\/brave-submitter(?![\w.\/-])/g;
 const FORBIDDEN_CI = ["1password"]; // case-insensitive
 
 function fail(msg) {
@@ -75,7 +77,7 @@ for (const [from, to] of brandFiles) {
 writeFileSync(join(outDir, "robots.txt"), fill(`User-agent: *\nAllow: /\n\nSitemap: {{SITE_URL}}/sitemap.xml\n`));
 writeFileSync(
   join(outDir, "sitemap.xml"),
-  fill(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>{{SITE_URL}}/</loc></url>\n</urlset>\n`),
+  fill(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>{{SITE_URL}}/</loc></url>\n  <url><loc>{{SITE_URL}}/privacy</loc></url>\n  <url><loc>{{SITE_URL}}/terms</loc></url>\n</urlset>\n`),
 );
 writeFileSync(
   join(outDir, "llms.txt"),
@@ -89,11 +91,11 @@ Indexing Dispatch is an MCP server run by TAT Inc. Its address is {{MCP_URL}} (s
 
 - [Try it](https://{{SITE_URL_HOST}}/#try): paste your link and copy a ready-made prompt (check the site then send it to Brave, just send to Brave, or set up IndexNow).
 - [What is IndexNow?](https://{{SITE_URL_HOST}}/#indexnow): a plain-English explainer. A ping asks engines to look at new or changed pages; it does not guarantee indexing.
-- [Plug it in once](https://{{SITE_URL_HOST}}/#connect): setup steps for Claude, Codex, Cursor and ChatGPT.
+- [Plug it in once](https://{{SITE_URL_HOST}}/#connect): step 1, setup steps for Claude, Codex, Cursor and ChatGPT.
 - [The four tools](https://{{SITE_URL_HOST}}/#tools): submit-brave-url, audit-site, submit-indexnow, render-submission-canvas.
 - [What you'll get back](https://{{SITE_URL_HOST}}/#expect): the Brave statuses (accepted, verification_required, rejected, timeout, error) and what each means.
-- [Privacy](https://{{SITE_URL_HOST}}/#privacy): what the server logs. The page has no cookies and no analytics.
-- [Terms](https://{{SITE_URL_HOST}}/#terms): only submit pages you own or have permission to submit.
+- [Privacy](https://{{SITE_URL_HOST}}/privacy): what the server logs. The page has no cookies and no analytics.
+- [Terms](https://{{SITE_URL_HOST}}/terms): only submit pages you own or have permission to submit.
 
 ## Contact
 
@@ -115,7 +117,8 @@ function walk(dir) {
     if (ext === ".png" || ext === ".woff2" || ext === ".ico") continue; // binary: extension check only
     const text = readFileSync(p, "utf8");
     if (text.includes("{{")) problems.push(`leftover "{{" in ${rel}`);
-    for (const f of FORBIDDEN) if (text.includes(f)) problems.push(`forbidden string "${f}" in ${rel}`);
+    const gated = text.replace(ALLOWED_REPO_LINK, "");
+    for (const f of FORBIDDEN) if (gated.includes(f)) problems.push(`forbidden string "${f}" in ${rel}`);
     const lower = text.toLowerCase();
     for (const f of FORBIDDEN_CI) if (lower.includes(f)) problems.push(`forbidden string "${f}" in ${rel}`);
   }

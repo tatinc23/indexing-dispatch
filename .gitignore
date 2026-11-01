@@ -59,3 +59,4 @@ brand/shots/
 !.dev.vars.example
 !.env.example
 src/worker/generated/
+.playwright-mcp/

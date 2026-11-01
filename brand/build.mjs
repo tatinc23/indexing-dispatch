@@ -1,5 +1,6 @@
 // Builds the brand assets from the Runway/Recraft vector mark (brand/runway/mark-recraft.svg).
 // node brand/build.mjs  -> brand/mark.svg, brand/favicon.svg and PNGs in brand/out/
+// The share card (og.png) is drawn separately by brand/og.mjs from brand/og.html.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,7 +21,9 @@ const glyph = (ink, accent) => `<path fill="${ink}" d="${bracket}"/><path fill="
 
 fs.writeFileSync(path.join(dir, "mark.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="Indexing Dispatch">${glyph(INK, LIME)}</svg>\n`);
 fs.writeFileSync(path.join(dir, "mark-dark-ink.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="Indexing Dispatch">${glyph(BG, "#2f7a1f")}</svg>\n`);
-const tile = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="${BG}"/><svg x="28" y="28" width="456" height="456" viewBox="${vb}">${glyph(INK, LIME)}</svg></svg>\n`;
+// Tab icon in the page's Air Mail look: envelope paper, red/blue air-mail stripe frame, navy bracket, green arrow.
+const NAVY = "#13203F", PAPER = "#FBFCFE", AM_RED = "#D7372B", AM_BLUE = "#1D4FC4", ARROW = "#2f7a1f";
+const tile = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><pattern id="am" width="176" height="176" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="64" height="176" fill="${AM_RED}"/><rect x="88" width="64" height="176" fill="${AM_BLUE}"/></pattern></defs><rect width="512" height="512" rx="80" fill="${PAPER}"/><rect width="512" height="512" rx="80" fill="url(#am)"/><rect x="58" y="58" width="396" height="396" rx="30" fill="${PAPER}"/><svg x="70" y="70" width="372" height="372" viewBox="${vb}">${glyph(NAVY, ARROW)}</svg></svg>\n`;
 fs.writeFileSync(path.join(dir, "favicon.svg"), tile);
 
 const fontCss = (f, fam, w) => `@font-face{font-family:'${fam}';src:url('data:font/woff2;base64,${fs.readFileSync(path.join(dir, "..", "views/render-submission-canvas/fonts", f)).toString("base64")}') format('woff2');font-weight:${w};}`;
@@ -33,7 +36,6 @@ const markSvg = (size) => `<svg width="${size}" height="${size}" viewBox="${vb}"
 const pages = {
   "logo-lockup.png": [1600, 520, `<div style="display:flex;align-items:center;gap:56px;padding:70px 90px;height:520px">${markSvg(300)}<div><div class="word" style="font-size:132px">Indexing<br>Dispatch</div><div class="tag" style="font-size:24px;margin-top:28px">URL submission // AI-readiness audit</div></div></div>`],
   "logo-stacked.png": [1000, 1000, `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px;height:1000px">${markSvg(420)}<div class="word" style="font-size:110px;text-align:center">Indexing<br>Dispatch</div><div class="tag" style="font-size:20px">URL submission // AI-readiness audit</div></div>`],
-  "og.png": [1200, 630, `<div style="display:flex;align-items:center;gap:56px;padding:0 70px;height:630px;background-image:radial-gradient(circle at 2px 2px,rgba(228,228,231,.1) 1px,transparent 0);background-size:32px 32px">${markSvg(230)}<div><div class="word" style="font-size:92px">Indexing<br>Dispatch</div><div class="tag" style="font-size:19px;margin-top:24px">Send your pages to search. See what each one said.</div></div></div>`],
 };
 const browser = await puppeteer.launch({ headless: true });
 const page = await browser.newPage();

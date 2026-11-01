@@ -66,22 +66,26 @@ export const auditResultSchema = z.object({
 export type AuditResult = z.infer<typeof auditResultSchema>;
 
 export const indexNowEngine = z.object({
-  engine: z.string(), // as documented by the protocol, e.g. "api.indexnow.org"
-  endpoint: z.string(),
-  ok: z.boolean(),
-  httpStatus: z.number().optional(),
-  message: z.string(),
+  engine: z.string().describe("Endpoint name as the IndexNow protocol documents it, e.g. api.indexnow.org."),
+  endpoint: z.string().describe("The URL that was called."),
+  ok: z.boolean().describe("true if this endpoint accepted the request (HTTP 200 or 202)."),
+  httpStatus: z.number().optional().describe("HTTP status the endpoint answered; absent when the request got no response."),
+  message: z.string().describe("What this endpoint's answer means."),
 });
 
 export const indexNowResultSchema = z.object({
-  status: z.enum(["submitted", "key_not_verified", "rejected", "blocked", "error"]),
-  host: z.string(),
-  urlCount: z.number(),
-  keyLocation: z.string(),
-  keyVerified: z.boolean(), // we fetched keyLocation and its body matched the key BEFORE pinging
-  engines: z.array(indexNowEngine),
-  message: z.string(),
-  durationMs: z.number(),
+  status: z
+    .enum(["submitted", "key_not_verified", "rejected", "blocked", "error"])
+    .describe(
+      "Outcome. submitted: IndexNow answered HTTP 200 or 202 (received, not a promise of indexing). key_not_verified: the key file could not be fetched or did not contain exactly the key; nothing was sent. rejected: IndexNow refused the request (HTTP 4xx such as 400, 403, 422 or 429); see message. blocked: the key file address was refused by the server's safety check; nothing was sent. error: the input was invalid, a server limit applied, or the request failed or got an unexpected answer; see message.",
+    ),
+  host: z.string().describe("The host the request was for, lowercased."),
+  urlCount: z.number().describe("Number of URLs in this request; once the URLs have been checked, duplicates are not counted. 0 when the input was refused before the URLs were checked."),
+  keyLocation: z.string().describe("The key file address that was used: the one given, or https://<host>/<key>.txt."),
+  keyVerified: z.boolean().describe("true only if the key file was fetched and held exactly the key before anything was sent to IndexNow."),
+  engines: z.array(indexNowEngine).describe("One entry per IndexNow endpoint contacted; empty when nothing was sent."),
+  message: z.string().describe("Plain-language account of what happened and what to do next. Report it to the user as written."),
+  durationMs: z.number().describe("Time the call took, in milliseconds."),
 });
 export type IndexNowResult = z.infer<typeof indexNowResultSchema>;
 

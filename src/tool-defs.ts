@@ -49,12 +49,12 @@ export const submitIndexnowDef = {
     name: "submit-indexnow",
     title: "Submit URLs via IndexNow",
     description:
-      "Tell IndexNow (Bing, Yandex, Naver and other participating engines; one request is shared with all of them) that up to 100 URLs on one host are new or changed. First fetches the key file you host (default https://<host>/<key>.txt) and only sends if it contains exactly the key; every URL must be on that exact host. Sends one request and never retries. A submission asks engines to crawl; it does not guarantee indexing. You must create and host your own key file; no key is built in.",
+      "Tell IndexNow (Bing, Yandex, Naver and other participating engines; one request is shared with all of them) that pages on one host are new or changed. First fetches the key file you host and sends nothing unless it contains exactly your key; the pages must sit on that host under the key file's folder. Sends one request and never retries. Read `status`: only `submitted` means IndexNow accepted the request, and a submission asks engines to crawl; it does not guarantee indexing. You must create and host your own key file; no key is built in.",
     inputSchema: z.object({
       host: z.string().trim().min(1).max(253).describe("Exact host the URLs belong to, e.g. www.example.com (no scheme or path). Subdomains are separate hosts."),
-      key: z.string().trim().min(1).max(256).describe("Your IndexNow key: 8-128 characters, letters, digits and hyphens. The same text must be hosted as a plain-text key file on the host."),
-      urls: z.array(z.string().max(2048)).max(1000).describe("URLs to submit, at most 100 per call, all http(s) and on `host`."),
-      keyLocation: z.string().trim().max(2048).optional().describe("Where the key file is hosted, if not https://<host>/<key>.txt. Must be on the same host."),
+      key: z.string().trim().min(1).max(256).describe("Your IndexNow key, exactly as written inside the key file you host on this site. The key file is checked against it before anything is sent."),
+      urls: z.array(z.string().max(2048)).min(1).max(100).describe("Full addresses of the new or changed pages, all on `host` and under the key file's folder (the whole site when the key file is at the site root)."),
+      keyLocation: z.string().trim().max(2048).optional().describe("Full address of your key file. Leave it out when the file is at https://<host>/<key>.txt, which is the default."),
     }),
     outputSchema: indexNowResultSchema,
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
