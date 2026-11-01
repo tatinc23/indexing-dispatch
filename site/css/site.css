@@ -73,6 +73,7 @@ main{max-width:76rem;margin:0 auto;padding:clamp(10px,1.6vw,20px) var(--gutter) 
 
 h1{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(2.5rem,5.7vw,4.7rem);line-height:.9;letter-spacing:.004em;color:var(--ink);margin-top:clamp(10px,1.8vw,22px);max-width:calc(100% - clamp(60px,9vw,130px))}
 .sub{font-size:clamp(1.05rem,1.7vw,1.25rem);line-height:1.4;color:var(--ink-2);margin-top:10px;max-width:40rem}
+.hook{display:block;font-weight:700;color:var(--ink);margin-bottom:2px}
 
 /* the steps: postmark numbers, perforations between */
 .route{list-style:none;margin-top:clamp(14px,2vw,22px);max-width:46rem}
@@ -343,7 +344,11 @@ details[open] > summary > .chev{transform:rotate(90deg)}
   .more-link{display:none}
   .ret{min-height:40px}
   h1{margin-top:6px}
-  .addr code{font-size:.8rem;padding:8px 10px}
+  .addr{flex-wrap:nowrap}
+  .addr code{flex:1 1 auto;min-width:0;font-size:.74rem;padding:8px 8px}
+  .addr .btn{flex:none;width:46px;padding:0}
+  .addr .btn .btn-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .sub{font-size:1rem}
   .go-row .stamp-btn{flex:1 1 100%}
   .choices span{font-size:.9rem;padding:6px 11px 6px 9px}
   .mark{font-size:1.25rem}
