@@ -1,6 +1,6 @@
 {
-  "name": "brave-submitter",
-  "title": "Brave URL Submitter (Indexing Dispatch)",
+  "name": "indexing-dispatch",
+  "title": "Indexing Dispatch",
   "description": "Send a page to Brave Search, check how ready your site is for AI and search, and ping IndexNow. Each tool reports what it actually saw. Free, no sign-in. Not affiliated with Brave.",
   "version": "1.0.0",
   "websiteUrl": "{{SITE_URL}}",
@@ -8,7 +8,7 @@
   "transport": "streamable-http",
   "authentication": "none",
   "remotes": [{ "type": "streamable-http", "url": "{{MCP_URL}}" }],
-  "mcpServers": { "brave-submitter": { "url": "{{MCP_URL}}" } },
+  "mcpServers": { "indexing-dispatch": { "url": "{{MCP_URL}}" } },
   "tools": ["submit-brave-url", "audit-site", "submit-indexnow", "render-submission-canvas"],
   "publisher": { "name": "TAT Inc", "url": "https://tatinc.us/" },
   "support": "mailto:emailme@tatinc.us"

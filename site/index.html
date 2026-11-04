@@ -71,13 +71,13 @@
                 <ol class="clicks">
                   <li>Open <b>Customize</b>, then <b>Connectors</b>.</li>
                   <li>Click <b>+ Add</b>, then <b>Add custom connector</b>.</li>
-                  <li>Name it <b>brave-submitter</b>, paste the server address, click <b>Continue</b>.</li>
+                  <li>Name it <b>indexing-dispatch</b>, paste the server address, click <b>Continue</b>.</li>
                   <li>Under <b>Authentication</b>, choose <b>No sign in</b>, then click <b>Add</b>.</li>
-                  <li>In a chat, click <b>+</b> (lower left), open <b>Connectors</b> and switch brave-submitter on.</li>
+                  <li>In a chat, click <b>+</b> (lower left), open <b>Connectors</b> and switch indexing-dispatch on.</li>
                 </ol>
                 <p class="note">Team or Enterprise: an owner adds it under <b>Organization settings</b>, <b>Connectors</b>, then each person clicks <b>Connect</b>. The no-cost plan allows one custom connector.</p>
                 <p class="note">Claude Code:</p>
-                <div class="snip"><div class="snip-bar"><span id="snip-claude-l">Terminal</span><button type="button" class="copy-snip" data-copy="snip-claude" hidden aria-describedby="snip-claude-l">Copy</button></div><pre id="snip-claude" tabindex="0" aria-labelledby="snip-claude-l"><code>claude mcp add --transport http brave-submitter {{MCP_URL}}</code></pre></div>
+                <div class="snip"><div class="snip-bar"><span id="snip-claude-l">Terminal</span><button type="button" class="copy-snip" data-copy="snip-claude" hidden aria-describedby="snip-claude-l">Copy</button></div><pre id="snip-claude" tabindex="0" aria-labelledby="snip-claude-l"><code>claude mcp add --transport http indexing-dispatch {{MCP_URL}}</code></pre></div>
                 <p class="src"><a href="https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp">Anthropic&rsquo;s guide</a></p>
               </div>
             </details>
@@ -85,12 +85,12 @@
               <summary><h3>Codex</h3><span class="where">ChatGPT desktop app, IDE extension, CLI</span></summary>
               <div class="app-body">
                 <p class="note">The ChatGPT desktop app, the Codex IDE extension and the Codex CLI share one setup, so adding it in one place covers all three.</p>
-                <p class="note"><b>ChatGPT desktop app:</b> <b>Settings</b>, <b>MCP servers</b>, <b>Add server</b>. Name it brave-submitter, choose <b>Streamable HTTP</b>, paste the server address, save, then <b>Restart</b>. Type <code>/mcp</code> in the message box to see it listed.</p>
+                <p class="note"><b>ChatGPT desktop app:</b> <b>Settings</b>, <b>MCP servers</b>, <b>Add server</b>. Name it indexing-dispatch, choose <b>Streamable HTTP</b>, paste the server address, save, then <b>Restart</b>. Type <code>/mcp</code> in the message box to see it listed.</p>
                 <p class="note"><b>IDE extension:</b> gear menu, <b>MCP servers</b>, <b>Add server</b>. Same fields, save, then <b>Restart extension</b>.</p>
                 <p class="note"><b>CLI:</b> run this, then <code>codex mcp list</code> to check it&rsquo;s there.</p>
-                <div class="snip"><div class="snip-bar"><span id="snip-codex-l">Terminal</span><button type="button" class="copy-snip" data-copy="snip-codex" hidden aria-describedby="snip-codex-l">Copy</button></div><pre id="snip-codex" tabindex="0" aria-labelledby="snip-codex-l"><code>codex mcp add brave-submitter --url {{MCP_URL}}</code></pre></div>
+                <div class="snip"><div class="snip-bar"><span id="snip-codex-l">Terminal</span><button type="button" class="copy-snip" data-copy="snip-codex" hidden aria-describedby="snip-codex-l">Copy</button></div><pre id="snip-codex" tabindex="0" aria-labelledby="snip-codex-l"><code>codex mcp add indexing-dispatch --url {{MCP_URL}}</code></pre></div>
                 <p class="note"><b>Or edit the config file</b> <code>~/.codex/config.toml</code> (or <code>.codex/config.toml</code> in a trusted project):</p>
-                <div class="snip"><div class="snip-bar"><span id="snip-toml-l">config.toml</span><button type="button" class="copy-snip" data-copy="snip-toml" hidden aria-describedby="snip-toml-l">Copy</button></div><pre id="snip-toml" tabindex="0" aria-labelledby="snip-toml-l"><code>[mcp_servers.brave-submitter]
+                <div class="snip"><div class="snip-bar"><span id="snip-toml-l">config.toml</span><button type="button" class="copy-snip" data-copy="snip-toml" hidden aria-describedby="snip-toml-l">Copy</button></div><pre id="snip-toml" tabindex="0" aria-labelledby="snip-toml-l"><code>[mcp_servers.indexing-dispatch]
 url = "{{MCP_URL}}"</code></pre></div>
                 <p class="src"><a href="https://learn.chatgpt.com/docs/extend/mcp">OpenAI&rsquo;s Codex guide</a></p>
               </div>
@@ -98,8 +98,8 @@ url = "{{MCP_URL}}"</code></pre></div>
             <details class="app">
               <summary><h3>Cursor</h3><span class="where">mcp.json</span></summary>
               <div class="app-body">
-                <p class="note">Add this to <code>~/.cursor/mcp.json</code> to use it in every project, or to <code>.cursor/mcp.json</code> for one project. If the file already has servers, add the brave-submitter entry inside the existing <code>mcpServers</code>.</p>
-                <div class="snip"><div class="snip-bar"><span id="snip-cursor-l">mcp.json</span><button type="button" class="copy-snip" data-copy="snip-cursor" hidden aria-describedby="snip-cursor-l">Copy</button></div><pre id="snip-cursor" tabindex="0" aria-labelledby="snip-cursor-l"><code>{ "mcpServers": { "brave-submitter": { "url": "{{MCP_URL}}" } } }</code></pre></div>
+                <p class="note">Add this to <code>~/.cursor/mcp.json</code> to use it in every project, or to <code>.cursor/mcp.json</code> for one project. If the file already has servers, add the indexing-dispatch entry inside the existing <code>mcpServers</code>.</p>
+                <div class="snip"><div class="snip-bar"><span id="snip-cursor-l">mcp.json</span><button type="button" class="copy-snip" data-copy="snip-cursor" hidden aria-describedby="snip-cursor-l">Copy</button></div><pre id="snip-cursor" tabindex="0" aria-labelledby="snip-cursor-l"><code>{ "mcpServers": { "indexing-dispatch": { "url": "{{MCP_URL}}" } } }</code></pre></div>
                 <p class="note">You can then turn it on or off from the <b>Customize</b> page in Cursor&rsquo;s sidebar.</p>
                 <p class="src"><a href="https://cursor.com/docs/context/mcp">Cursor&rsquo;s guide</a></p>
               </div>
@@ -111,12 +111,12 @@ url = "{{MCP_URL}}"</code></pre></div>
                 <ol class="clicks">
                   <li>Go to <b>Plugins</b>.</li>
                   <li>Select the plus button, then <b>Add custom MCP server</b>.</li>
-                  <li>Name it <b>brave-submitter</b>.</li>
+                  <li>Name it <b>indexing-dispatch</b>.</li>
                   <li>Under <b>Connection</b>, paste the server address.</li>
                   <li>Leave authentication off.</li>
                   <li>Tick <b>I understand and want to continue</b>.</li>
                   <li>Choose <b>Create as a plugin</b>, then install it.</li>
-                  <li>In a new chat, type <b>@</b> and pick brave-submitter.</li>
+                  <li>In a new chat, type <b>@</b> and pick indexing-dispatch.</li>
                 </ol>
                 <p class="note">Pro can only connect read-only servers, and this one submits a form, so Pro can&rsquo;t use it. Use Claude, Codex or Cursor instead, or submit by hand at <a href="https://search.brave.com/submit-url">search.brave.com/submit-url</a>.</p>
                 <p class="src"><a href="https://help.openai.com/en/articles/12584461">OpenAI&rsquo;s guide</a></p>
@@ -152,7 +152,7 @@ url = "{{MCP_URL}}"</code></pre></div>
             <p class="vcap">Check my site, then send to Brave</p>
             <pre class="prompt" id="prompt-both" data-variant="both" data-cap="Check my site, then send to Brave" tabindex="0" aria-labelledby="prompt-cap">Please check my website, then send its main page to Brave Search.
 
-Use the brave-submitter connector (MCP server: {{MCP_URL}}). My main page is:
+Use the indexing-dispatch connector (MCP server: {{MCP_URL}}). My main page is:
 
 <span class="slot">[paste your page address here]</span>
 
@@ -169,7 +169,7 @@ Rules:
             <p class="vcap">Just send to Brave</p>
             <pre class="prompt" id="prompt-brave" data-variant="brave" data-cap="Just send to Brave" tabindex="0" aria-labelledby="prompt-cap">Please send one page of my website to Brave Search for me.
 
-Use the brave-submitter connector (MCP server: {{MCP_URL}}). Call its tool submit-brave-url one time, with targetUrl set to:
+Use the indexing-dispatch connector (MCP server: {{MCP_URL}}). Call its tool submit-brave-url one time, with targetUrl set to:
 
 <span class="slot">[paste your page address here]</span>
 
@@ -183,7 +183,7 @@ How to do it:
             <p class="vcap">Set up IndexNow</p>
             <pre class="prompt" id="prompt-indexnow" data-variant="indexnow" data-cap="Set up IndexNow" tabindex="0" aria-labelledby="prompt-cap">Please help me tell search engines about my website using IndexNow.
 
-Use the brave-submitter connector (MCP server: {{MCP_URL}}). My website's address is:
+Use the indexing-dispatch connector (MCP server: {{MCP_URL}}). My website's address is:
 
 <span class="slot">[paste your page address here]</span>
 
@@ -230,10 +230,10 @@ Rules:
         <div class="win">
           <div class="win-top">Your AI app &rsaquo; Add custom connector</div>
           <div class="win-body">
-            <div class="fld"><span class="fl">Name</span><span class="fv">brave-submitter</span></div>
+            <div class="fld"><span class="fl">Name</span><span class="fv">indexing-dispatch</span></div>
             <div class="fld"><span class="fl">Server address</span><span class="fv type" data-type="{{MCP_URL}}" data-from="900" data-to="2300">{{MCP_URL}}</span></div>
             <span class="fake-btn" data-hit="1">Add</span>
-            <div class="conn show on"><span>brave-submitter</span><span class="sw"><b></b></span><span class="sw-on">On</span></div>
+            <div class="conn show on"><span>indexing-dispatch</span><span class="sw"><b></b></span><span class="sw-on">On</span></div>
           </div>
         </div>
       </div>
@@ -343,7 +343,7 @@ Rules:
             <li>Brave receives the URL you submit, which is the point.</li>
             <li>The server runs on Cloudflare Workers (the Brave tool uses Cloudflare&rsquo;s browser service), and Cloudflare may keep its own logs.</li>
             <li>The other tools log only the tool name, the result and timing. The IndexNow tool also logs the host and how many URLs.</li>
-            <li>The audit requests your page and its <code>robots.txt</code>, <code>llms.txt</code> and sitemap, identifying itself as <code>brave-submitter-audit/1.0</code>.</li>
+            <li>The audit requests your page and its <code>robots.txt</code>, <code>llms.txt</code> and sitemap, identifying itself as <code>indexing-dispatch-audit/1.0</code>.</li>
             <li>This page has no cookies and no analytics.</li>
           </ul>
           <p><a href="privacy">Privacy as its own page</a></p>
@@ -383,7 +383,7 @@ Rules:
     <nav aria-label="Footer">
       <a href="privacy">Privacy</a>
       <a href="terms">Terms</a>
-      <a href="https://github.com/tatinc23/brave-submitter">Source code</a>
+      <a href="https://github.com/tatinc23/indexing-dispatch">Source code</a>
       <a href="mailto:emailme@tatinc.us">emailme@tatinc.us</a>
     </nav>
   </div>

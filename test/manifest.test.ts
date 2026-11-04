@@ -21,7 +21,7 @@ test("mcp.json lists exactly the tools the server registers", () => {
 test("mcp.json points at the MCP endpoint in every shape and needs no auth", () => {
   assert.equal(manifest.url, "{{MCP_URL}}");
   assert.equal(manifest.remotes[0].url, "{{MCP_URL}}");
-  assert.equal(manifest.mcpServers["brave-submitter"].url, "{{MCP_URL}}");
+  assert.equal(manifest.mcpServers["indexing-dispatch"].url, "{{MCP_URL}}");
   assert.equal(manifest.authentication, "none");
 });
 

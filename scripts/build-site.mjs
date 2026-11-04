@@ -23,7 +23,7 @@ const EXTRA_FILES = new Set(["_headers"]); // the one allowed file without an ex
 const SKIP_TOP_DIRS = new Set(["video"]);
 const FORBIDDEN = ["github.com/tatinc23", "CLAUDE.md", "TASKS", "DECISIONS", "op://"];
 // The one org link allowed on the page: the public source repo, exactly (not -private, not a subpath).
-const ALLOWED_REPO_LINK = /https:\/\/github\.com\/tatinc23\/brave-submitter(?![\w.\/-])/g;
+const ALLOWED_REPO_LINK = /https:\/\/github\.com\/tatinc23\/indexing-dispatch(?![\w.\/-])/g;
 const FORBIDDEN_CI = ["1password"]; // case-insensitive
 
 function fail(msg) {

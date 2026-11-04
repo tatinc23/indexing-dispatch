@@ -1,4 +1,6 @@
-# brave-submitter
+# Indexing Dispatch
+
+Indexing Dispatch by TAT Inc. Not affiliated with, endorsed by or sponsored by Brave Software. "Brave" is a trademark of Brave Software, Inc. and is used here only to describe what the tools submit to.
 
 A remote MCP server (mcp-use) that helps a site owner get found by search engines and AI assistants, and reports what actually happened. It never returns an estimated or simulated result: every value comes from a response the server received.
 
@@ -108,7 +110,7 @@ Any fetch of a caller-supplied URL goes through the SSRF guard: `src/safe-fetch.
 - DNS is resolved by the server and every returned address must be public. Refused: loopback, private (10/8, 172.16/12, 192.168/16), link-local and cloud-metadata (169.254/16), carrier-grade NAT, documentation and benchmark ranges, multicast and reserved space, and for IPv6 anything that is not global unicast (plus IPv4-mapped, NAT64, 6to4 wrapping a non-public IPv4, Teredo).
 - The socket connects to the exact address that was validated, so a second DNS answer cannot redirect it. Host header and TLS server name still use the hostname.
 - Redirects are followed by hand, at most 3, and every hop is re-checked. audit-site pins llms.txt, robots.txt and sitemap fetches to the page's own origin; the IndexNow key fetch is pinned to the key file's origin.
-- Bodies are capped (1 MB by default, 16 MB at most), timeouts are enforced across all hops, and no cookies or connection reuse are used. The user agent is `brave-submitter-audit/1.0` with the repo URL.
+- Bodies are capped (1 MB by default, 16 MB at most), timeouts are enforced across all hops, and no cookies or connection reuse are used. The user agent is `indexing-dispatch-audit/1.0` with the repo URL.
 - HTML and robots.txt parsing is bounded and linear-time, so a hostile page cannot cost more than a fixed multiple of its (capped) size.
 
 ## Browser and sandbox
@@ -123,10 +125,10 @@ Chromium runs with its sandbox on. `BRAVE_SUBMITTER_NO_SANDBOX=1` adds `--no-san
 - **What is logged:** one JSON line per call with the target's origin and path (no query string) or host, status, error code and duration; no caller identity or request headers.
 - **Client config:**
   ```bash
-  claude mcp add --transport http brave-submitter https://dispatch-mcp.tatinc.us/mcp
+  claude mcp add --transport http indexing-dispatch https://dispatch-mcp.tatinc.us/mcp
   ```
   ```json
-  { "mcpServers": { "brave-submitter": { "type": "http", "url": "https://dispatch-mcp.tatinc.us/mcp" } } }
+  { "mcpServers": { "indexing-dispatch": { "type": "http", "url": "https://dispatch-mcp.tatinc.us/mcp" } } }
   ```
   Step-by-step setup for Claude, Codex, Cursor and ChatGPT: `docs/connect-steps.md`.
 - **Deploy your own:** `CLOUDFLARE_ACCOUNT_ID=<your account id> npm run deploy:worker` (builds the inline canvas with `scripts/build-worker.mjs`, then `wrangler deploy` from `deploy/mcp/`). Type-check with `npm run typecheck:worker`.

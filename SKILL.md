@@ -1,11 +1,11 @@
 ---
-name: brave-submitter
-description: Use when the user wants their site found by search engines or AI assistants ("index my site", "submit my URL to Brave", "ping IndexNow", "check my site's AI readiness"). Drives the brave-submitter MCP tools and reports only what they observed.
+name: indexing-dispatch
+description: Use when the user wants their site found by search engines or AI assistants ("index my site", "submit my URL to Brave", "ping IndexNow", "check my site's AI readiness"). Drives the indexing-dispatch MCP tools and reports only what they observed.
 ---
 
-# brave-submitter: operating manual for the agent
+# indexing-dispatch: operating manual for the agent
 
-Tools (all on the `brave-submitter` MCP server):
+Tools (all on the `indexing-dispatch` MCP server):
 `audit-site` (read-only), `submit-brave-url`, `submit-indexnow`, `render-submission-canvas`, and `snapshot-cloudflare-baseline` (only listed if the operator configured a Cloudflare token).
 
 ## Ground rules

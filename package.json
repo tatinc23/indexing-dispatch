@@ -1,5 +1,5 @@
 {
-  "name": "brave-submitter",
+  "name": "indexing-dispatch",
   "type": "module",
   "engines": {
     "node": ">=22.22.2"
@@ -10,11 +10,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tatinc23/brave-submitter.git"
+    "url": "git+https://github.com/tatinc23/indexing-dispatch.git"
   },
-  "homepage": "https://github.com/tatinc23/brave-submitter#readme",
+  "homepage": "https://github.com/tatinc23/indexing-dispatch#readme",
   "bugs": {
-    "url": "https://github.com/tatinc23/brave-submitter/issues"
+    "url": "https://github.com/tatinc23/indexing-dispatch/issues"
   },
   "keywords": [
     "mcp",

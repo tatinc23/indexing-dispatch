@@ -136,7 +136,7 @@ describe("safeFetch against a local fixture server", () => {
     assert.equal(r.finalUrl, `${base()}/page?q=1`);
     assert.equal(r.headers["content-type"], "text/html; charset=utf-8");
     assert.equal(r.bodyText, `host=fixture.example:${port};ua=${USER_AGENT};cookie=none`);
-    assert.equal(USER_AGENT, "brave-submitter-audit/1.0 (+https://github.com/tatinc23/brave-submitter)");
+    assert.equal(USER_AGENT, "indexing-dispatch-audit/1.0 (+https://github.com/tatinc23/indexing-dispatch)");
   });
 
   it("connects to the address it validated and resolves each hop once", async () => {

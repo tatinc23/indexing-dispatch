@@ -2,7 +2,7 @@
 // No node:* imports, so it runs on Node (src/safe-fetch.ts) and on Cloudflare Workers (src/worker/safe-fetch-worker.ts).
 // Each runtime supplies a resolver (system DNS / DNS-over-HTTPS) and a one-hop request function.
 
-export const USER_AGENT = "brave-submitter-audit/1.0 (+https://github.com/tatinc23/brave-submitter)";
+export const USER_AGENT = "indexing-dispatch-audit/1.0 (+https://github.com/tatinc23/indexing-dispatch)";
 
 export const DEFAULT_TIMEOUT_MS = 8_000;
 export const MAX_TIMEOUT_MS = 30_000;

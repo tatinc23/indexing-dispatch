@@ -13,7 +13,7 @@ if (!url || !["list", "call", "resources", "read"].includes(command)) {
 }
 
 const headers = process.env.MCP_BEARER ? { authorization: `Bearer ${process.env.MCP_BEARER}` } : {};
-const client = new Client({ name: "brave-submitter-test", version: "1.0.0" });
+const client = new Client({ name: "indexing-dispatch-test", version: "1.0.0" });
 const transport = new StreamableHTTPClientTransport(new URL(url), { requestInit: { headers } });
 
 const elide = (v) =>

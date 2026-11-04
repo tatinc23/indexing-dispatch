@@ -19,8 +19,8 @@ export function toolInvocationMeta(invoking: string, invoked: string) {
 export const WIDGET_ORIGIN = "https://dispatch-mcp.tatinc.us";
 
 export const SERVER_INFO = {
-  name: "brave-submitter",
-  title: "Brave URL Submitter",
+  name: "indexing-dispatch",
+  title: "Indexing Dispatch",
   version: "1.0.0",
   description: "Claude is said to search the web with Brave.\nSend Brave your link, audit your site for AI, ping IndexNow. See what each one really said.",
   instructions:

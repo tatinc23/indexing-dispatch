@@ -1,6 +1,6 @@
 # Discovery suite (design, 2026-10-27)
 
-Goal: grow brave-submitter from one tool into "AI Discovery, Indexing & Audit Suite" without ever returning a fabricated result.
+Goal: grow indexing-dispatch from one tool into "AI Discovery, Indexing & Audit Suite" without ever returning a fabricated result.
 Source vision: the maintainer's Gemini/Argon prompt (kept out of git in `Gemini 4 Argon/`). Argon's code is a UI mock with simulated tools; we reuse its layout and concepts only.
 
 ## Tools (all behind the existing access gate; kebab-case)
