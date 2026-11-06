@@ -479,25 +479,28 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
 
   return (
     <div className={`canvas${drawer ? " drawer-open" : ""}`}>
-      <div className="shell" inert={drawer !== null}>
+      <div className="shell envelope" inert={drawer !== null}>
+        <div className="env-in">
         <header className="head">
+          <Stamp />
+          <h1 className="mark">
+            <Logo />
+            <span>Indexing Dispatch</span>
+          </h1>
+          <p className="tagline">Submit URLs, audit AI readiness, snapshot Cloudflare traffic.</p>
           <div className="head-top">
             <button type="button" className="ghost" onClick={reset} disabled={running}>
               <Icon name="reset" />
               <span>{confirmReset ? "Click again to clear results" : "Reset workspace"}</span>
             </button>
           </div>
-          <h1 className="mark">
-            <span>Indexing</span> <span>Dispatch</span>
-          </h1>
-          <p className="tagline">Submit URLs, audit AI readiness, snapshot Cloudflare traffic.</p>
           {props.mode === "autonomous" && <p className="note">Autonomous mode was requested. This canvas still waits for you to press Initiate run.</p>}
         </header>
 
         <div className="layout">
           <aside className="rail" aria-labelledby="rail-h">
-            <h2 id="rail-h" className="label green">
-              Processing units
+            <h2 id="rail-h" className="label">
+              Send with
             </h2>
             <ul className="units">
               {UNITS.map((u) => {
@@ -508,8 +511,8 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
                     <button type="button" className="unit-main" onClick={() => setViewing(u.id)} aria-current={viewing === u.id ? "true" : undefined} aria-describedby={`unit-${u.id}-d`}>
                       <span className="unit-top">
                         <span className="unit-num">
-                          <span className="dot" aria-hidden="true" />
-                          Unit {u.num}
+                          <span className="sr-only">Unit </span>
+                          <span className="pm">{u.num}</span>
                         </span>
                         <span className="unit-word">{st.word}</span>
                       </span>
@@ -535,10 +538,10 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
           <main className="main">
             <section className="buffer" aria-labelledby="buffer-h">
               <div className="buffer-head">
-                <h2 id="buffer-h" className="label green">
-                  Canonical data buffer
+                <h2 id="buffer-h" className="label">
+                  Pages to send
                 </h2>
-                <p id="urls-hint" className="count green" aria-live="polite">
+                <p id="urls-hint" className="count" aria-live="polite">
                   {urls.length} valid URL{urls.length === 1 ? "" : "s"}
                   {hosts.length > 0 ? ` · ${domainLabel(hosts)}` : ""}
                 </p>
@@ -564,7 +567,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
                 </div>
                 <div className="buffer-go">
                   <button type="button" className="go" onClick={() => void run()} disabled={running || blockers.length > 0} aria-describedby="run-hint">
-                    {running ? "Running..." : "Initiate run"}
+                    <span>{running ? "Running..." : "Initiate run"}</span>
                   </button>
                   {running && (
                     <button type="button" className="ghost wide" onClick={() => (stopRef.current = true)}>
@@ -602,7 +605,10 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
 
             <section className="receipt" aria-labelledby="receipt-h">
               <div className="bar">
-                <span>Receipt // Unit {unit.num}</span>
+                <span className="bar-l">
+                  <span className="pm" aria-hidden="true">{unit.num}</span>
+                  <span>Receipt, unit {unit.num}</span>
+                </span>
                 <span className={`bar-r tone-${toneOfPhase(viewPhase)}`}>{barText[viewing]}</span>
               </div>
               <div className="receipt-body">
@@ -641,7 +647,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
 
                 {hasResults && (
                   <div className="actions">
-                    <h3 className="label green">Proactive output actions</h3>
+                    <h3 className="label">Use the results</h3>
                     <div className="action-row">
                       <button type="button" className="action" disabled={social.length === 0} onClick={(e) => openDrawer("social", e.currentTarget)}>
                         <Icon name="share" />
@@ -669,6 +675,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
             </section>
           </main>
         </div>
+        </div>
       </div>
 
       {drawer && (
@@ -693,6 +700,27 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
         )}
       </div>
     </div>
+  );
+}
+
+// Decorative: the postage stamp and the mark, drawn like the dispatch.tatinc.us page.
+function Stamp() {
+  return (
+    <span className="stamp" aria-hidden="true">
+      <span className="stamp-face">
+        <span className="stamp-word">Air</span>
+        <span className="stamp-word">mail</span>
+      </span>
+    </span>
+  );
+}
+
+function Logo() {
+  return (
+    <svg className="logo" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" focusable="false">
+      <rect x="2" y="6" width="28" height="20" rx="2" fill="#FBFCFE" stroke="#13203F" strokeWidth="2.5" />
+      <path d="M3.5 8l12.5 9 12.5-9" fill="none" stroke="#1D4FC4" strokeWidth="2.5" strokeLinejoin="round" />
+    </svg>
   );
 }
 

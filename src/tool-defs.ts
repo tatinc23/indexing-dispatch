@@ -14,9 +14,10 @@ export function toolInvocationMeta(invoking: string, invoked: string) {
   } as const;
 }
 
-/** Origin the canvas view is served for (ChatGPT needs one exact https origin; mcp-use swaps in the hashed
- *  claudemcpcontent.com domain for Claude clients on its own). */
-export const WIDGET_ORIGIN = "https://dispatch-mcp.tatinc.us";
+/* The canvas view declares NO ui.domain (2026-11-06). Claude accepts only {sha256(connector URL)[:32]}.claudemcpcontent.com
+ * and showed "Couldn't load this widget" for "https://dispatch-mcp.tatinc.us". mcp-use 2.11.2 did not swap the value for
+ * a Claude-named client on the Worker, and its swap hashes the authored string, not the connector URL. Without a domain
+ * every host uses its default sandbox origin (MCP Apps spec: the field is optional). See DECISIONS.md 2026-11-06. */
 
 export const SERVER_INFO = {
   name: "indexing-dispatch",
@@ -86,7 +87,7 @@ export const renderSubmissionCanvasDef = {
       mode: z.enum(["interactive", "autonomous"]).optional().describe("Defaults to interactive. `autonomous` only shows a note that it was requested; the panel still waits for the person to press Initiate run."),
     }),
     outputSchema: canvasPropsSchema,
-    view: { name: "render-submission-canvas", description: "Submission canvas", domain: WIDGET_ORIGIN },
+    view: { name: "render-submission-canvas", description: "Submission canvas" },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     _meta: toolInvocationMeta("Opening the panel...", "Panel ready"),
 } as const;

@@ -3,7 +3,6 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import {
   SERVER_INFO,
-  WIDGET_ORIGIN,
   auditSiteDef,
   renderSubmissionCanvasDef,
   submitBraveUrlDef,
@@ -41,7 +40,6 @@ test("every tool carries ChatGPT invocation labels within OpenAI's 64-character 
   assert.deepEqual(toolInvocationMeta("a", "b")["openai/toolInvocation"], { invoking: "a", invoked: "b" });
 });
 
-test("canvas view declares one exact https origin", () => {
-  assert.equal(renderSubmissionCanvasDef.view.domain, WIDGET_ORIGIN);
-  assert.match(WIDGET_ORIGIN, /^https:\/\/[a-z0-9.-]+$/);
+test("canvas view declares no ui.domain (Claude rejects anything but its hashed domain)", () => {
+  assert.equal("domain" in renderSubmissionCanvasDef.view, false);
 });
