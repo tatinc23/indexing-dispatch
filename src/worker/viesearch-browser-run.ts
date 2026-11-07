@@ -64,6 +64,7 @@ export async function submitViaViesearchRun(
     site: {
       label: "Viesearch",
       manualUrl: VIESEARCH_SUBMIT_URL,
+      submitPageUrl: VIESEARCH_SUBMIT_URL,
       receivedNote: "Acceptance means the URL was received; it is not a guarantee that Viesearch will list it.",
       classifyOptions: { siteLabel: "Viesearch", rejectedPatterns: [/already a registered user/i] },
       snapshotScript: READ_VIESEARCH_SNAPSHOT,

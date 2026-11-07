@@ -103,7 +103,8 @@ export class BudgetLedger {
     }
     for (const kind of Object.keys(this.config.kinds) as BudgetKind[]) {
       const cfg = this.config.kinds[kind];
-      const ks = this.state.kinds[kind];
+      // Saved state from an older build may lack a kind added since (e.g. viesearch): start it empty.
+      const ks = (this.state.kinds[kind] ??= emptyKind());
       ks.starts = ks.starts.filter((s) => t - s < Math.max(cfg.windowMs, cfg.minSpacingMs));
       ks.sent = ks.sent.filter(([, at]) => t - at < cfg.dedupeMs);
       const dead = ks.leases.filter((l) => l.expiresAt <= t);
@@ -143,7 +144,10 @@ export class BudgetLedger {
       return { ok: false, code: "busy", message: `The browser service allows a new browser only every ${Math.round(cfg.minSpacingMs / 1000)} seconds and one was just started.`, retryAfterSeconds: secs(last + cfg.minSpacingMs - t) };
     }
     if (cfg.usesBrowser) {
-      const inFlight = this.state.kinds.brave.leases.length * this.config.browserReserveMs;
+      const browserLeases = (Object.keys(this.config.kinds) as BudgetKind[])
+        .filter((k) => this.config.kinds[k].usesBrowser)
+        .reduce((n, k) => n + (this.state.kinds[k]?.leases.length ?? 0), 0);
+      const inFlight = browserLeases * this.config.browserReserveMs;
       if (this.state.browserMsUsed + inFlight + this.config.browserReserveMs > this.config.dailyBrowserMs) {
         const resetIn = msUntilNextUtcDay(t);
         return {

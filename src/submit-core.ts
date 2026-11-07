@@ -82,6 +82,9 @@ export interface SiteBehavior {
   label: string;
   /** Canonical submit page named in messages that send the user to finish by hand. */
   manualUrl: string;
+  /** The page the flow opens and fills. Required, so a non-Brave site can never fall back to Brave's form
+   *  (security review 2026-11-08: Viesearch once typed the user's email into Brave's page). */
+  submitPageUrl: string;
   /** Note appended to the accepted message. Defaults to the Brave indexing note. */
   receivedNote?: string;
   /** Classify options (rejected patterns, site label) for the shared conservative classifier. */
@@ -204,7 +207,7 @@ export async function runBraveSubmission(targetUrl: string, options: CoreSubmitO
 
 async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { start?: number; end?: number }): Promise<SubmitOutcome> {
   const timings: Timings = { ...DEFAULT_TIMINGS, ...options.timings };
-  const submitPageUrl = options.submitPageUrl ?? BRAVE_SUBMIT_URL;
+  const submitPageUrl = options.submitPageUrl ?? options.site?.submitPageUrl ?? BRAVE_SUBMIT_URL;
   const allowedOrigin = new URL(submitPageUrl).origin;
   const startedAt = Date.now();
   const durationMs = () => Math.max(0, Date.now() - startedAt);
