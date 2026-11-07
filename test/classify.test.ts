@@ -83,6 +83,12 @@ describe("classify", () => {
     );
     assert.equal(o.kind, "accepted");
   });
+
+  it("rejects on caller-supplied rejected patterns (Viesearch: already registered)", () => {
+    const registered = { text: "already a registered user", role: "", explicitError: false };
+    assert.equal(classify(snap({ alerts: [registered] }), { rejectedPatterns: [/already a registered user/i] }).kind, "rejected");
+    assert.equal(classify(snap({ alerts: [registered] })).kind, "pending");
+  });
 });
 
 describe("sanitizers", () => {
@@ -91,6 +97,12 @@ describe("sanitizers", () => {
     const out = sanitizeText(`session ${token} done`);
     assert.equal(out, "session [redacted] done");
     assert.ok(sanitizeText("x ".repeat(2000), 100).length <= 101);
+  });
+
+  it("redacts caller-supplied secrets (contact email) wherever they appear", () => {
+    const out = sanitizeText("sent to me@example.com, cc me@example.com ok", 1200, ["me@example.com"]);
+    assert.equal(out, "sent to [redacted], cc [redacted] ok");
+    assert.equal(sanitizeText("nothing secret here", 1200, [""]), "nothing secret here");
   });
 
   it("strips query and fragment from URLs", () => {

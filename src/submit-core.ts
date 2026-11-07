@@ -1,5 +1,6 @@
 import { classify, sanitizeText, signature, stripUrl, type Observation, type Snapshot } from "./classify.js";
 import { FIND_SUBMIT_BUTTON, FIND_URL_INPUT, READ_SNAPSHOT } from "./page-scripts.js";
+import type { ClassifyOptions } from "./classify.js";
 import type { Diagnostics, ErrorCode, SubmitResult } from "./schema.js";
 
 // Runtime-neutral Brave submission flow. Drives any Puppeteer-compatible browser through the structural types below:
@@ -67,6 +68,28 @@ export const DEFAULT_TIMINGS: Timings = {
   pollMs: 250,
 };
 
+export interface SubmitField {
+  /** In-page script resolving to the form input. */
+  script: string;
+  /** Exact text typed into the input (verified back after typing). */
+  value: string;
+  /** Human label for messages, e.g. "URL" or "email". */
+  label: string;
+}
+
+export interface SiteBehavior {
+  /** "Brave" | "Viesearch": used in user-facing messages. */
+  label: string;
+  /** Canonical submit page named in messages that send the user to finish by hand. */
+  manualUrl: string;
+  /** Note appended to the accepted message. Defaults to the Brave indexing note. */
+  receivedNote?: string;
+  /** Classify options (rejected patterns, site label) for the shared conservative classifier. */
+  classifyOptions?: ClassifyOptions;
+  /** In-page snapshot script. Defaults to READ_SNAPSHOT. */
+  snapshotScript?: string;
+}
+
 export interface CoreSubmitOptions {
   /** Starts the browser. */
   launch: () => Promise<BrowserLike>;
@@ -79,13 +102,21 @@ export interface CoreSubmitOptions {
   timings?: Partial<Timings>;
   /** Debug/test seam: called with every page snapshot taken after Submit was clicked. */
   onSnapshot?: (snap: Snapshot, elapsedMs: number) => void;
+  /** Overrides the Brave defaults (labels, verdict logic, snapshot script). */
+  site?: SiteBehavior;
+  /** Extra fields filled and verified after the URL, in order (Viesearch passes its email field). */
+  extraFields?: SubmitField[];
+  /** Values scrubbed from page text in results (e.g. the visitor's contact email). */
+  redact?: string[];
+  /** false skips screenshots (pages that echo private input). Defaults to true. */
+  screenshots?: boolean;
 }
 
 export interface SubmitOutcome {
   result: SubmitResult;
   /** Base64 JPEG, present only for non-accepted outcomes where a page existed. */
   screenshot?: string;
-  /** True once Submit was actually clicked, i.e. Brave may have received the URL. */
+  /** True once Submit was actually clicked, i.e. the site may have received the URL. */
   clicked: boolean;
   /** Wall time from launch start to close end, i.e. the browser time this run used. 0 when no browser started. */
   browserMs: number;
@@ -149,9 +180,9 @@ async function waitForElement(
   }
 }
 
-async function readSnapshot(page: PageLike): Promise<Snapshot | null> {
+async function readSnapshot(page: PageLike, script: string): Promise<Snapshot | null> {
   try {
-    return (await page.evaluate(READ_SNAPSHOT)) as Snapshot;
+    return (await page.evaluate(script)) as Snapshot;
   } catch (e) {
     if (isNavigationRace(e)) return null;
     throw e;
@@ -179,6 +210,16 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
   const durationMs = () => Math.max(0, Date.now() - startedAt);
   const overBudget = () => durationMs() >= timings.totalBudgetMs;
 
+  const label = options.site?.label ?? "Brave";
+  const manualUrl = options.site?.manualUrl ?? BRAVE_SUBMIT_URL;
+  const receivedNote =
+    options.site?.receivedNote ??
+    "Acceptance means the URL was received; it is not a guarantee that Brave will index it.";
+  const classifyOptions = options.site?.classifyOptions ?? {};
+  const snapshotScript = options.site?.snapshotScript ?? READ_SNAPSHOT;
+  const redact = options.redact ?? [];
+  const takeScreenshots = options.screenshots !== false;
+
   const observed: string[] = [];
   let lastSignature = "";
   let lastSnap: Snapshot | null = null;
@@ -196,7 +237,7 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
 
   const diagnostics = async (): Promise<{ diag: Diagnostics; screenshot?: string }> => {
     let screenshot: string | undefined;
-    if (page && !page.isClosed()) {
+    if (takeScreenshots && page && !page.isClosed()) {
       try {
         const shot = await page.screenshot({ type: "jpeg", quality: 55, encoding: "base64" });
         if (typeof shot === "string") screenshot = shot;
@@ -209,7 +250,7 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
       diag: {
         finalUrl: page && !page.isClosed() ? stripUrl(page.url()) : undefined,
         observed,
-        domExcerpt: lastSnap ? sanitizeText(lastSnap.bodyText) : undefined,
+        domExcerpt: lastSnap ? sanitizeText(lastSnap.bodyText, 1200, redact) : undefined,
         screenshotAttached: screenshot !== undefined,
       },
     };
@@ -251,24 +292,38 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
       });
       status = response?.status();
     } catch (e) {
-      return await fail("error", `Could not load Brave's submit page: ${describe(e)}`, "navigation_failed");
+      return await fail("error", `Could not load ${label}'s submit page: ${describe(e)}`, "navigation_failed");
     }
     if (status !== undefined && status >= 400) {
-      const rate = status === 429 ? " Brave is rate-limiting this client; do not retry immediately." : "";
-      return await fail("error", `Brave's submit page returned HTTP ${status}.${rate}`, "http_error");
+      const rate = status === 429 ? ` ${label} is rate-limiting this client; do not retry immediately."` : "";
+      return await fail("error", `${label}'s submit page returned HTTP ${status}.${rate}`, "http_error");
     }
 
-    // Input
-    const input = await waitForElement(page, FIND_URL_INPUT, timings.uiReadyMs, timings.pollMs);
-    if (!input) {
-      return await fail("error", "The URL input did not appear on Brave's submit page (page layout may have changed).", "input_not_found");
-    }
-    await input.focus();
-    await input.type(targetUrl);
-    const typed = (await input.evaluate((el) => el.value)) as string;
-    await input.dispose().catch(() => undefined);
-    if (typed !== targetUrl) {
-      return await fail("error", "The page changed the URL while it was being entered; refusing to submit a different value.", "input_mismatch");
+    // Inputs: the URL first, then any extra fields (Viesearch's contact email). Each typed value is
+    // read back; a changed value aborts the run instead of submitting something else.
+    const fields = [{ script: FIND_URL_INPUT, value: targetUrl, label: "URL" as string }].concat(
+      (options.extraFields ?? []).map((f) => ({ script: f.script, value: f.value, label: f.label })),
+    );
+    for (const field of fields) {
+      const input = await waitForElement(page, field.script, timings.uiReadyMs, timings.pollMs);
+      if (!input) {
+        return await fail(
+          "error",
+          `The ${field.label} input did not appear on ${label}'s submit page (page layout may have changed).`,
+          "input_not_found",
+        );
+      }
+      await input.focus();
+      await input.type(field.value);
+      const typed = (await input.evaluate((el) => el.value)) as string;
+      await input.dispose().catch(() => undefined);
+      if (typed !== field.value) {
+        return await fail(
+          "error",
+          `The page changed the ${field.label} while it was being entered; refusing to submit a different value.`,
+          "input_mismatch",
+        );
+      }
     }
 
     // Submit button: must be the exact "Submit" button and must be enabled.
@@ -276,21 +331,21 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
       el.evaluate((b) => !b.disabled && b.getAttribute("aria-disabled") !== "true");
     const button = await waitForElement(page, FIND_SUBMIT_BUTTON, timings.uiReadyMs, timings.pollMs, isEnabled);
     if (!button) {
-      const snap = await readSnapshot(page);
+      const snap = await readSnapshot(page, snapshotScript);
       lastSnap = snap;
       const present = snap?.buttons.map((b) => `${b.text}${b.disabled ? " (disabled)" : ""}`).join(", ") || "none";
       const code: ErrorCode = snap?.buttons.some((b) => /^submit$/i.test(b.text)) ? "submit_button_disabled" : "submit_button_not_found";
       return await fail(
         "error",
         code === "submit_button_disabled"
-          ? `The Submit button never became enabled after entering the URL (visible buttons: ${present}). Brave's page did not accept the value; no explicit rejection text was shown.`
+          ? `The Submit button never became enabled after entering the URL (visible buttons: ${present}). ${label}'s page did not accept the value; no explicit rejection text was shown.`
           : `No enabled "Submit" button was found (visible buttons: ${present}).`,
         code,
       );
     }
     if (overBudget()) {
       await button.dispose().catch(() => undefined);
-      return await fail("timeout", "Ran out of time budget before submitting; nothing was sent to Brave.");
+      return await fail("timeout", `Ran out of time budget before submitting; nothing was sent to ${label}.`);
     }
 
     await button.click();
@@ -303,13 +358,13 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
     let lastObs: Observation = { kind: "pending", note: "no snapshot yet" };
     for (;;) {
       if (offOriginUrl) {
-        return await fail("error", `The page navigated away from Brave's submit page (to ${offOriginUrl}); aborting.`, "unexpected_navigation");
+        return await fail("error", `The page navigated away from ${label}'s submit page (to ${offOriginUrl}); aborting.`, "unexpected_navigation");
       }
       const elapsed = Date.now() - clickedAt;
-      const snap = await readSnapshot(page);
+      const snap = await readSnapshot(page, snapshotScript);
       if (snap) {
         lastSnap = snap;
-        lastObs = classify(snap);
+        lastObs = classify(snap, classifyOptions);
         note(snap, lastObs);
         options.onSnapshot?.(snap, elapsed);
 
@@ -319,9 +374,8 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
               result: {
                 targetUrl,
                 status: "accepted",
-                message:
-                  "Brave's submit page displayed an explicit success confirmation. Acceptance means the URL was received; it is not a guarantee that Brave will index it.",
-                confirmationText: sanitizeText(lastObs.confirmationText, 300),
+                message: `${label}'s page showed an explicit success confirmation. ${receivedNote}`,
+                confirmationText: sanitizeText(lastObs.confirmationText, 300, redact),
                 durationMs: durationMs(),
               },
               clicked,
@@ -329,7 +383,7 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
             };
           }
           if (lastObs.kind === "rejected") {
-            const out = await fail("rejected", `Brave's page showed an error after submission: "${sanitizeText(lastObs.text, 300)}"`);
+            const out = await fail("rejected", `${label}'s page showed an error after submission: "${sanitizeText(lastObs.text, 300, redact)}"`);
             return out;
           }
           if (lastObs.kind === "verification") {
@@ -337,7 +391,7 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
             if (Date.now() - challengeSince >= timings.challengePersistMs) {
               return await fail(
                 "verification_required",
-                `Brave's page is asking for a human verification step that this server will not attempt to solve (${lastObs.evidence}). Complete the submission manually at ${BRAVE_SUBMIT_URL}.`,
+                `${label}'s page is asking for a human verification step that this server will not attempt to solve (${lastObs.evidence}). Complete the submission manually at ${manualUrl}.`,
               );
             }
           } else {
@@ -352,7 +406,7 @@ async function runFlow(targetUrl: string, options: CoreSubmitOptions, meter: { s
     const ambiguous = lastObs.kind === "pending" ? ` Last state: ${lastObs.note}.` : "";
     return await fail(
       "timeout",
-      `Clicked Submit but saw no definitive confirmation or rejection within ${Math.round((Date.now() - clickedAt) / 1000)}s.${ambiguous} The URL may or may not have been received; check manually before retrying.`,
+      `Clicked Submit but saw no definitive confirmation or rejection within ${Math.round((Date.now() - clickedAt) / 1000)}s.${ambiguous} The URL may or may not have been received by ${label}; check manually before retrying.`,
     );
   } catch (e) {
     return await fail("error", `Unexpected failure: ${describe(e)}`, "unexpected_error");

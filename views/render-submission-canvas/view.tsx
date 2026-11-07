@@ -1,7 +1,7 @@
 // MCP App view for the render-submission-canvas tool. Props arrive as the tool's structuredContent (CanvasProps);
 // the four discovery tools are called through the host with useDynamicTool (works without the Register typing).
 import { ToolError, useDynamicTool, useToolContext } from "mcp-use/react";
-import type { AuditResult, CloudflareBaseline, IndexNowResult } from "../../src/contract.js";
+import type { AuditResult, CloudflareBaseline } from "../../src/contract.js";
 import type { SubmitResult } from "../../src/schema.js";
 import { Canvas, type Runner } from "./Canvas.js";
 import { normalizeProps } from "./lib.js";
@@ -17,7 +17,7 @@ function structured<T>(res: { structuredContent?: unknown }, tool: string): T {
 export default function RenderSubmissionCanvas() {
   const ctx = useToolContext();
   const brave = useDynamicTool<{ targetUrl: string }, SubmitResult>("submit-brave-url");
-  const indexNow = useDynamicTool<{ host: string; key: string; urls: string[]; keyLocation?: string }, IndexNowResult>("submit-indexnow");
+  const viesearch = useDynamicTool<{ targetUrl: string; contactEmail: string }, SubmitResult>("submit-viesearch-url");
   const audit = useDynamicTool<{ targetUrl: string; strategy?: "mobile" | "desktop" }, AuditResult>("audit-site");
   const cloudflare = useDynamicTool<{ zoneId: string; previous?: CloudflareBaseline }, CloudflareBaseline>("snapshot-cloudflare-baseline");
 
@@ -45,8 +45,8 @@ export default function RenderSubmissionCanvas() {
     async brave(args) {
       return unwrap<SubmitResult>(() => brave.callTool(args), "submit-brave-url");
     },
-    async indexNow(args) {
-      return unwrap<IndexNowResult>(() => indexNow.callTool(args), "submit-indexnow");
+    async viesearch(args) {
+      return unwrap<SubmitResult>(() => viesearch.callTool(args), "submit-viesearch-url");
     },
     async audit(args) {
       return unwrap<AuditResult>(() => audit.callTool(args), "audit-site");

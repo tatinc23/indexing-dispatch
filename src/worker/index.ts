@@ -7,14 +7,14 @@
 import { env } from "cloudflare:workers";
 import { MCPServer, registerViews, type ViewsManifest } from "mcp-use";
 import { auditSite } from "../audit.js";
-import type { CanvasProps } from "../contract.js";
-import { auditToolResult, indexNowToolResult } from "../discovery-format.js";
+import type { CanvasProps, ViesearchResult } from "../contract.js";
+import { auditToolResult, viesearchToolResult } from "../discovery-format.js";
 import { toToolResult } from "../format.js";
-import { bearerMatches, dedupeKey, dedupeSetKey } from "../guard.js";
-import { submitIndexNow } from "../indexnow.js";
+import { bearerMatches, dedupeKey } from "../guard.js";
 import type { BudgetKind, LedgerDenied, LedgerGranted } from "../limits.js";
-import { SERVER_INFO, auditDenied, auditSiteDef, braveDenied, defaultKeyLocation, indexNowDenied, renderSubmissionCanvasDef, submitBraveUrlDef, submitIndexnowDef } from "../tool-defs.js";
+import { SERVER_INFO, auditDenied, auditSiteDef, braveDenied, renderSubmissionCanvasDef, submitBraveUrlDef, submitViesearchUrlDef, viesearchDenied } from "../tool-defs.js";
 import { submitViaBrowserRun } from "./brave-browser-run.js";
+import { submitViaViesearchRun } from "./viesearch-browser-run.js";
 import manifestTemplate from "../../site/mcp.json";
 import viewAssets from "./generated/view-assets.json";
 import views from "./generated/views-manifest.json";
@@ -91,21 +91,24 @@ export const submitBraveUrl = server.tool(submitBraveUrlDef, async ({ targetUrl 
   }
 });
 
-export const submitIndexnow = server.tool(submitIndexnowDef, async (input) => {
-  const keyLocation = input.keyLocation || defaultKeyLocation(input.host, input.key);
-  const gate = await acquire("indexnow", dedupeSetKey(input.host, input.urls));
+export const submitViesearchUrl = server.tool(submitViesearchUrlDef, async ({ targetUrl, contactEmail }) => {
+  const gate = await acquire("viesearch", dedupeKey(targetUrl));
   if (!gate.ok) {
-    console.log(JSON.stringify({ event: "indexnow-denied", code: gate.code }));
-    return indexNowToolResult(indexNowDenied(input.host, input.urls.length, keyLocation, gate));
+    // Never log the email: only the outcome code is recorded.
+    console.log(JSON.stringify({ event: "viesearch-denied", code: gate.code }));
+    return viesearchToolResult(viesearchDenied(targetUrl, gate));
   }
-  let pinged = false;
+  let clicked = false;
+  let browserMs: number | undefined;
   try {
-    const result = await submitIndexNow(input);
-    pinged = result.engines.length > 0;
-    console.log(JSON.stringify({ event: "indexnow-finished", host: result.host, status: result.status, urlCount: result.urlCount }));
-    return indexNowToolResult(result);
+    const outcome = await submitViaViesearchRun(targetUrl, contactEmail, cfg.BROWSER);
+    clicked = outcome.clicked;
+    browserMs = outcome.browserMs;
+    const { origin, pathname } = new URL(targetUrl);
+    console.log(JSON.stringify({ event: "viesearch-finished", target: origin + pathname, status: outcome.result.status, errorCode: outcome.result.errorCode, durationMs: outcome.result.durationMs, browserMs }));
+    return viesearchToolResult(outcome.result as ViesearchResult);
   } finally {
-    await release("indexnow", gate.leaseId, { sent: pinged });
+    await release("viesearch", gate.leaseId, { sent: clicked, ...(browserMs === undefined ? {} : { browserMs }) });
   }
 });
 
@@ -184,7 +187,7 @@ export default {
       return withHeaders(new Response(manifestBody(`https://${new URL(request.url).hostname}/mcp`, site), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300", "access-control-allow-origin": "*" } }), true);
     }
     if (pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
-      const body = { name: "Indexing Dispatch MCP server", mcpEndpoint: `https://${new URL(request.url).hostname}/mcp`, about: page, tools: ["audit-site", "submit-brave-url", "submit-indexnow", "render-submission-canvas"] };
+      const body = { name: "Indexing Dispatch MCP server", mcpEndpoint: `https://${new URL(request.url).hostname}/mcp`, about: page, tools: ["audit-site", "submit-brave-url", "render-submission-canvas"] };
       return withHeaders(Response.json(body, { headers: { "cache-control": "no-store" } }), true);
     }
     return withHeaders(new Response("not found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } }), true);

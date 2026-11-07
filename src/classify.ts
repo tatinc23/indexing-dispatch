@@ -20,12 +20,20 @@ const PRIVACY_NOTICE = /private usage metrics/i;
 const ERROR_WORDS =
   /\b(error|invalid|failed|failure|unable|couldn['’]?t|could not|not allowed|not accepted|rejected|too many|rate.?limit|try again|blocked|forbidden|denied)\b/i;
 
+export interface ClassifyOptions {
+  /** Extra alert patterns that count as an explicit rejection (e.g. Viesearch's "already a registered user"). */
+  rejectedPatterns?: RegExp[];
+  /** Site label for messages. Defaults to "Brave". */
+  siteLabel?: string;
+}
+
 /**
  * Pure classification of one page snapshot. Conservative by design: anything not
  * explicitly confirmed or rejected is "pending", and the caller decides what a
  * deadline means.
  */
-export function classify(snap: Snapshot): Observation {
+export function classify(snap: Snapshot, options: ClassifyOptions = {}): Observation {
+  const siteLabel = options.siteLabel ?? "Brave";
   const conf = snap.confirmation;
   const submittedButton = snap.buttons.some((b) => /^submitted$/i.test(b.text));
 
@@ -34,11 +42,22 @@ export function classify(snap: Snapshot): Observation {
     return { kind: "accepted", confirmationText: conf.regionText };
   }
 
+  const rejectedPatterns = options.rejectedPatterns ?? [];
   const alert = snap.alerts.find(
-    (a) => !PRIVACY_NOTICE.test(a.text) && (ERROR_WORDS.test(a.text) || a.explicitError),
+    (a) =>
+      !PRIVACY_NOTICE.test(a.text) &&
+      (ERROR_WORDS.test(a.text) || rejectedPatterns.some((re) => re.test(a.text)) || a.explicitError),
   );
   if (alert) return { kind: "rejected", text: alert.text };
-  if (snap.inputInvalid) return { kind: "rejected", text: "Brave marked the URL input as invalid (aria-invalid)." };
+  if (snap.inputInvalid) {
+    return {
+      kind: "rejected",
+      text:
+        options.siteLabel === undefined
+          ? "Brave marked the URL input as invalid (aria-invalid)."
+          : `${siteLabel} marked a form input as invalid (aria-invalid).`,
+    };
+  }
 
   // Human-action challenges only. Passive wording ("Verifying...", "Checking...") never matches.
   if (snap.challenge.frames.length > 0) {
@@ -65,9 +84,12 @@ export function signature(snap: Snapshot, obs: Observation): string {
 }
 
 /** Strips long token-like strings and collapses whitespace before text leaves the process. */
-export function sanitizeText(text: string, max = 1200): string {
+export function sanitizeText(text: string, max = 1200, extraRedact: readonly string[] = []): string {
   const collapsed = text.replace(/\s+/g, " ").trim();
-  const redacted = collapsed.replace(/[A-Za-z0-9_\-+/=]{32,}/g, "[redacted]");
+  let redacted = collapsed.replace(/[A-Za-z0-9_\-+/=]{32,}/g, "[redacted]");
+  for (const secret of extraRedact) {
+    if (secret) redacted = redacted.split(secret).join("[redacted]");
+  }
   return redacted.length > max ? `${redacted.slice(0, max)}…` : redacted;
 }
 

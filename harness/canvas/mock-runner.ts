@@ -1,6 +1,6 @@
 // MOCK tool results for the harness only. Not imported by the shipped view. Every value here is invented for
 // layout testing and the harness page says so on screen.
-import type { AuditResult, CloudflareBaseline, IndexNowResult } from "../../src/contract.js";
+import type { AuditResult, CloudflareBaseline } from "../../src/contract.js";
 import type { SubmitResult } from "../../src/schema.js";
 import type { Runner } from "../../views/render-submission-canvas/Canvas.js";
 
@@ -9,7 +9,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Scenario switches (query params in main.tsx). All values below stay invented; the harness page says so on screen. */
 export interface Scenario {
   brave?: "mixed" | "accepted" | "rejected" | "error";
-  indexnow?: "ok" | "key_not_verified" | "rejected";
+  viesearch?: "accepted" | "rejected" | "error";
   audit?: "findings" | "clean" | "unreachable";
 }
 
@@ -43,27 +43,16 @@ export function mockRunner(delay = 500, sc: Scenario = {}): Runner {
       }
       return { ...base, status: "rejected", message: "Brave showed an error for this URL.", diagnostics: { observed: ["Error"], screenshotAttached: false } } satisfies SubmitResult;
     },
-    async indexNow({ host, urls, key }) {
+    async viesearch({ targetUrl }) {
       await wait(delay);
-      if (sc.indexnow === "key_not_verified") {
-        return { status: "key_not_verified", host, urlCount: urls.length, keyLocation: `https://${host}/${key}.txt`, keyVerified: false, engines: [], message: "The key file did not contain the key. Nothing was sent.", durationMs: 420 } satisfies IndexNowResult;
+      const base = { targetUrl, durationMs: 12400, diagnostics: undefined };
+      if (sc.viesearch === "rejected") {
+        return { ...base, status: "rejected", message: "Viesearch rejected this URL.", diagnostics: { observed: ["Already a registered user"], screenshotAttached: false } } satisfies SubmitResult;
       }
-      if (sc.indexnow === "rejected") {
-        return { status: "rejected", host, urlCount: urls.length, keyLocation: `https://${host}/${key}.txt`, keyVerified: true, engines: [{ engine: "api.indexnow.org", endpoint: "https://api.indexnow.org/indexnow", ok: false, httpStatus: 422, message: "URLs do not belong to the host." }], message: "IndexNow rejected the request.", durationMs: 900 } satisfies IndexNowResult;
+      if (sc.viesearch === "error") {
+        return { ...base, status: "error", errorCode: "rate_limited", message: "This server's hourly Viesearch limit was reached.", retryAfterSeconds: 1800 } satisfies SubmitResult;
       }
-      return {
-        status: "submitted",
-        host,
-        urlCount: urls.length,
-        keyLocation: `https://${host}/${key}.txt`,
-        keyVerified: true,
-        engines: [
-          { engine: "api.indexnow.org", endpoint: "https://api.indexnow.org/indexnow", ok: true, httpStatus: 200, message: "Accepted." },
-          { engine: "www.bing.com", endpoint: "https://www.bing.com/indexnow", ok: false, httpStatus: 429, message: "Too many requests." },
-        ],
-        message: `Submitted ${urls.length} URL(s); 1 of 2 endpoints answered OK.`,
-        durationMs: 1300,
-      } satisfies IndexNowResult;
+      return { ...base, status: "accepted", message: "Viesearch showed a success confirmation.", confirmationText: "Thank you for your submission." } satisfies SubmitResult;
     },
     async audit({ targetUrl, strategy }): Promise<AuditResult> {
       await wait(delay);

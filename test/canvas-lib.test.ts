@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { AuditResult, CloudflareBaseline, IndexNowResult } from "../src/contract.js";
+import type { AuditResult, CloudflareBaseline } from "../src/contract.js";
 import type { SubmitResult } from "../src/schema.js";
 import {
   auditPhase,
@@ -12,13 +12,12 @@ import {
   buildRecheckPrompt,
   cloudflarePhase,
   domainLabel,
+  emailProblem,
   gapCount,
-  indexNowKeyProblem,
-  indexNowPhase,
   initialUrlText,
   normalizeProps,
   parseUrlList,
-  planIndexNow,
+  planViesearch,
   suggestedFilesBundle,
   unitStatus,
   urlsWithFacts,
@@ -45,6 +44,11 @@ describe("normalizeProps", () => {
     const p = normalizeProps(null);
     assert.deepEqual(p.initialUrls, []);
     assert.equal(normalizeProps({ enabledTools: { cloudflare: "yes" } }).enabledTools.cloudflare, false);
+  });
+  it("passes through morePlacesUrl when present, absent otherwise", () => {
+    assert.equal(normalizeProps({ morePlacesUrl: "https://dispatch.tatinc.us/more-places" }).morePlacesUrl, "https://dispatch.tatinc.us/more-places");
+    assert.equal(normalizeProps({}).morePlacesUrl, undefined);
+    assert.equal(normalizeProps({ morePlacesUrl: 42 }).morePlacesUrl, undefined);
   });
   it("prefills https://domain/ only when no URLs were passed", () => {
     assert.equal(initialUrlText(normalizeProps({ domain: "example.com" })), "https://example.com/");
@@ -74,30 +78,24 @@ describe("parseUrlList", () => {
   });
 });
 
-describe("IndexNow plan", () => {
-  const key = "abcd1234efgh5678";
-  it("requires a key and never invents one", () => {
-    assert.equal(planIndexNow(["https://a.example/"], "", "").ok, false);
-    assert.match(indexNowKeyProblem("short") ?? "", /8 to 128/);
-    assert.match(indexNowKeyProblem("has space 12345") ?? "", /letters, digits/);
-    assert.equal(indexNowKeyProblem(key), null);
+describe("Viesearch plan", () => {
+  const email = "me@example.com";
+  it("requires an email and never invents one", () => {
+    assert.equal(planViesearch(["https://a.example/"], "").ok, false);
+    assert.match(emailProblem("") ?? "", /Enter your email address/);
+    assert.match(emailProblem("not-an-email") ?? "", /does not look complete/);
+    assert.match(emailProblem("a@b c.com") ?? "", /does not look complete/);
+    assert.equal(emailProblem("  me@example.com  ".trim()), null);
   });
-  it("requires one host", () => {
-    const p = planIndexNow(["https://a.example/", "https://b.example/"], key, "");
+  it("passes the email and every URL through untouched", () => {
+    const ok = planViesearch(["https://a.example/x", "https://b.example/y"], email);
+    assert.equal(ok.ok, true);
+    assert.deepEqual(ok.args, { urls: ["https://a.example/x", "https://b.example/y"], email });
+  });
+  it("needs at least one URL", () => {
+    const p = planViesearch([], email);
     assert.equal(p.ok, false);
-    assert.match(p.problem ?? "", /one host/);
-  });
-  it("omits keyLocation unless typed, and keeps it on the same host", () => {
-    const ok = planIndexNow(["https://a.example/x"], key, "");
-    assert.deepEqual(ok.args, { host: "a.example", key, urls: ["https://a.example/x"] });
-    const loc = planIndexNow(["https://a.example/x"], key, "https://a.example/keys/k.txt");
-    assert.equal(loc.args?.keyLocation, "https://a.example/keys/k.txt");
-    assert.equal(planIndexNow(["https://a.example/x"], key, "https://other.example/k.txt").ok, false);
-    assert.equal(planIndexNow(["https://a.example/x"], key, "nope").ok, false);
-  });
-  it("caps at 100 URLs", () => {
-    const urls = Array.from({ length: 101 }, (_, i) => `https://a.example/${i}`);
-    assert.equal(planIndexNow(urls, key, "").ok, false);
+    assert.match(p.problem ?? "", /at least one URL/);
   });
 });
 
@@ -110,12 +108,10 @@ describe("phases", () => {
     assert.equal(bravePhase([brave("accepted"), brave("error")]), "error");
     assert.equal(braveSummary([brave("accepted"), brave("rejected")], 3), "1 of 3 accepted, 1 not run");
   });
-  it("indexnow", () => {
-    const base: IndexNowResult = { status: "submitted", host: "a.example", urlCount: 1, keyLocation: "k", keyVerified: true, engines: [{ engine: "e", endpoint: "x", ok: true, message: "" }], message: "", durationMs: 1 };
-    assert.equal(indexNowPhase(base), "ready");
-    assert.equal(indexNowPhase({ ...base, engines: [...base.engines, { engine: "f", endpoint: "y", ok: false, message: "" }] }), "warning");
-    assert.equal(indexNowPhase({ ...base, status: "key_not_verified", keyVerified: false, engines: [] }), "warning");
-    assert.equal(indexNowPhase({ ...base, status: "rejected" }), "error");
+  it("viesearch rows reuse the Brave outcome phase", () => {
+    assert.equal(bravePhase([]), "idle");
+    assert.equal(bravePhase([brave("accepted")]), "ready");
+    assert.equal(bravePhase([brave("accepted"), brave("rejected")]), "warning");
   });
   it("audit and cloudflare", () => {
     const a: AuditResult = { status: "ok", targetUrl: "https://a.example/", message: "", findings: [{ id: "i", severity: "info", message: "" }], suggestedFiles: [], durationMs: 1 };
@@ -144,61 +140,56 @@ const auditOk = (over: Partial<AuditResult> = {}): AuditResult => ({
   durationMs: 1,
   ...over,
 });
-const inow = (over: Partial<IndexNowResult> = {}): IndexNowResult => ({
-  status: "submitted",
-  host: "a.example",
-  urlCount: 1,
-  keyLocation: "https://a.example/k.txt",
-  keyVerified: true,
-  engines: [{ engine: "api.indexnow.org", endpoint: "e", ok: true, message: "" }],
-  message: "",
-  durationMs: 1,
-  ...over,
-});
-
 describe("social drafts", () => {
   it("is null without an observed result for that URL", () => {
-    assert.equal(buildSocialDrafts({ brave: [], audits: [] }, "https://a.example/"), null);
-    assert.equal(buildSocialDrafts({ brave: [brave("accepted", "https://b.example/")], audits: [] }, "https://a.example/"), null);
-    assert.deepEqual(urlsWithFacts({ brave: [brave("accepted", "https://b.example/")], audits: [auditOk()] }), ["https://b.example/", "https://a.example/"]);
+    assert.equal(buildSocialDrafts({ brave: [], viesearch: [], audits: [] }, "https://a.example/"), null);
+    assert.equal(buildSocialDrafts({ brave: [brave("accepted", "https://b.example/")], viesearch: [], audits: [] }, "https://a.example/"), null);
+    assert.deepEqual(urlsWithFacts({ brave: [brave("accepted", "https://b.example/")], viesearch: [], audits: [auditOk()] }), ["https://b.example/", "https://a.example/"]);
   });
   it("reports non-accepted Brave outcomes as what they were", () => {
-    const d = buildSocialDrafts({ brave: [brave("timeout", "https://a.example/")], audits: [] }, "https://a.example/");
+    const d = buildSocialDrafts({ brave: [brave("timeout", "https://a.example/")], viesearch: [], audits: [] }, "https://a.example/");
     assert.ok(d);
     assert.match(d.x, /Brave Search submit form: gave no answer before the time limit\./);
     assert.doesNotMatch(d.x, /accepted/);
-    const r = buildSocialDrafts({ brave: [brave("rejected", "https://a.example/")], audits: [] }, "https://a.example/");
+    const r = buildSocialDrafts({ brave: [brave("rejected", "https://a.example/")], viesearch: [], audits: [] }, "https://a.example/");
     assert.match(r?.x ?? "", /rejected\./);
   });
+  it("reports Viesearch outcomes per URL and ignores other URLs' rows", () => {
+    const v = (status: "accepted" | "rejected", url = "https://a.example/"): SubmitResult => ({ targetUrl: url, status, message: "m", durationMs: 1000 });
+    const d = buildSocialDrafts({ brave: [], viesearch: [v("accepted"), v("rejected", "https://a.example/other")], audits: [] }, "https://a.example/");
+    assert.ok(d);
+    assert.match(d.x, /Viesearch submit form: accepted it\./);
+    assert.doesNotMatch(d.x, /rejected it/);
+    const r = buildSocialDrafts({ brave: [], viesearch: [v("rejected")], audits: [] }, "https://a.example/");
+    assert.match(r?.x ?? "", /Viesearch submit form: rejected it\./);
+  });
   it("uses only observed facts and never claims indexing, ranking or going live", () => {
-    const facts = { brave: [brave("accepted", "https://a.example/")], indexNow: inow(), indexNowUrls: ["https://a.example/"], audits: [auditOk()] };
+    const facts = { brave: [brave("accepted", "https://a.example/")], viesearch: [{ targetUrl: "https://a.example/", status: "accepted", message: "m", durationMs: 1000 } as SubmitResult], audits: [auditOk()] };
     const d = buildSocialDrafts(facts, "https://a.example/");
     assert.ok(d);
     const all = `${d.x}\n${d.linkedin}`;
     assert.match(d.x, /^https:\/\/a\.example\/\nBrave Search submit form: accepted\./);
-    assert.match(d.x, /IndexNow: submitted \(1 of 1 endpoint answered OK\)\./);
+    assert.match(d.x, /Viesearch submit form: accepted it\./);
     assert.match(d.x, /Audit: llms\.txt not found, 2 gaps flagged\./);
     assert.match(d.linkedin, /Checked Example \(https:\/\/a\.example\/\)\./);
     assert.match(d.linkedin, /HTTP 200; llms\.txt not found; sitemap not found; JSON-LD: Organization; 2 gaps flagged/);
     assert.doesNotMatch(all, /\b(live|indexed|ranking|ranked|officially|deployed|free|receipts?|visitors?|PageSpeed)\b/i);
   });
-  it("leaves out IndexNow when that URL was not in the request and when nothing was sent", () => {
-    const d1 = buildSocialDrafts({ brave: [brave("accepted", "https://a.example/")], indexNow: inow(), indexNowUrls: ["https://a.example/other"], audits: [] }, "https://a.example/");
-    assert.doesNotMatch(d1?.x ?? "", /IndexNow/);
-    const d2 = buildSocialDrafts({ brave: [], indexNow: inow({ status: "key_not_verified", keyVerified: false, engines: [] }), indexNowUrls: ["https://a.example/"], audits: [] }, "https://a.example/");
-    assert.match(d2?.x ?? "", /IndexNow: not sent, the key file was not verified\./);
+  it("leaves out Viesearch rows that belong to a different URL", () => {
+    const d1 = buildSocialDrafts({ brave: [brave("accepted", "https://a.example/")], viesearch: [{ targetUrl: "https://a.example/other", status: "accepted", message: "m", durationMs: 1 } as SubmitResult], audits: [] }, "https://a.example/");
+    assert.doesNotMatch(d1?.x ?? "", /Viesearch/);
   });
   it("includes PageSpeed only when a real score exists, and only in the LinkedIn draft", () => {
     const withPs = auditOk({ pageSpeed: { status: "ok", strategy: "mobile", performanceScore: 91 } });
-    const d = buildSocialDrafts({ brave: [], audits: [withPs] }, "https://a.example/");
+    const d = buildSocialDrafts({ brave: [], viesearch: [], audits: [withPs] }, "https://a.example/");
     assert.match(d?.linkedin ?? "", /PageSpeed performance 91 \(mobile\)/);
     assert.doesNotMatch(d?.x ?? "", /PageSpeed/);
-    const skipped = buildSocialDrafts({ brave: [], audits: [auditOk({ pageSpeed: { status: "skipped", reason: "no key" } })] }, "https://a.example/");
+    const skipped = buildSocialDrafts({ brave: [], viesearch: [], audits: [auditOk({ pageSpeed: { status: "skipped", reason: "no key" } })] }, "https://a.example/");
     assert.doesNotMatch(skipped?.linkedin ?? "", /PageSpeed/);
   });
   it("keeps the X draft within 280 and reports a matching count", () => {
     const longUrl = `https://a.example/${"p".repeat(400)}`;
-    const facts = { brave: [brave("accepted", longUrl)], indexNow: inow(), indexNowUrls: [longUrl], audits: [auditOk({ targetUrl: longUrl })] };
+    const facts = { brave: [brave("accepted", longUrl)], viesearch: [{ targetUrl: longUrl, status: "accepted", message: "m", durationMs: 1 } as SubmitResult], audits: [auditOk({ targetUrl: longUrl })] };
     const d = buildSocialDrafts(facts, longUrl);
     assert.ok(d);
     assert.ok(d.xCount <= X_LIMIT, String(d.xCount));
@@ -243,7 +234,7 @@ describe("LLM patch tabs", () => {
 describe("units", () => {
   it("states what each tool does without claims the code does not make", () => {
     assert.deepEqual(UNITS.map((u) => u.num), ["01", "02", "03", "04"]);
-    assert.match(UNITS[1].blurb, /Needs your key file hosted on your site/);
+    assert.match(UNITS[1].blurb, /Viesearch.*URL and email/);
     assert.doesNotMatch(UNITS.map((u) => u.blurb).join(" "), /Bing|Yandex|simultaneous|broadcast/i);
   });
   it("status word: READY only when included, enabled and not blocked", () => {

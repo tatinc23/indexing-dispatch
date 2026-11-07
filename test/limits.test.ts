@@ -57,13 +57,13 @@ describe("BudgetLedger: guard semantics", () => {
     const c = clock();
     const l = new BudgetLedger(undefined, DEFAULT_LEDGER_CONFIG, c.now);
     for (let i = 0; i < 6; i++) {
-      l.release("indexnow", granted(l.acquire("indexnow", `k${i}`)), { sent: true });
-      c.t += 1000;
+      l.release("viesearch", granted(l.acquire("viesearch", `k${i}`)), { sent: true, browserMs: 1000 });
+      c.t += 30_000; // Viesearch uses the shared browser: one start per 25 s
     }
-    const d = denied(l.acquire("indexnow", "k7"), "rate_limited", /6 IndexNow submissions per hour \(for all callers together\)/);
-    assert.ok(d.retryAfterSeconds > 3500);
+    const d = denied(l.acquire("viesearch", "k7"), "rate_limited", /6 Viesearch submissions per hour \(for all callers together\)/);
+    assert.ok(d.retryAfterSeconds > 3400);
     c.t += 3600_000;
-    granted(l.acquire("indexnow", "k7"));
+    granted(l.acquire("viesearch", "k7"));
   });
 
   it("audit: three at a time, no dedupe", () => {
@@ -136,10 +136,9 @@ describe("BudgetLedger: daily browser budget", () => {
     assert.equal(restored.usage().day, "2026-10-30");
   });
 
-  it("indexnow and audit never touch the browser budget", () => {
+  it("audit alone never touches the browser budget", () => {
     const l = new BudgetLedger(emptyLedgerState(T0), cfg, clock().now);
     l.release("audit", granted(l.acquire("audit", "x")), { sent: false, browserMs: 999_999 });
-    l.release("indexnow", granted(l.acquire("indexnow", "x")), { sent: true });
     assert.equal(l.state.browserMsUsed, 0);
   });
 });

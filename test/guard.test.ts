@@ -77,16 +77,16 @@ describe("config and helpers", () => {
   });
 });
 
-describe("per-tool budgets (indexnow / audit-site)", () => {
+describe("per-tool budgets (viesearch / audit-site)", () => {
   it("uses custom labels in denial messages and keeps the Brave wording by default", () => {
-    const g = new SubmissionGuard({ ...cfg, maxConcurrent: 1 }, undefined, { target: "IndexNow", running: "IndexNow submission", unit: "IndexNow submissions" });
+    const g = new SubmissionGuard({ ...cfg, maxConcurrent: 1 }, undefined, { target: "Viesearch", running: "Viesearch submission", unit: "Viesearch submissions" });
     const a = g.tryAcquire("k");
     assert.ok(a.ok);
     const busy = g.tryAcquire("k2");
-    assert.ok(!busy.ok && /IndexNow submission/.test(busy.message) && !/Brave/.test(busy.message));
+    assert.ok(!busy.ok && /Viesearch submission/.test(busy.message) && !/Brave/.test(busy.message));
     a.release({ clicked: true });
     const dup = g.tryAcquire("k");
-    assert.ok(!dup.ok && /IndexNow/.test(dup.message) && !/Brave/.test(dup.message));
+    assert.ok(!dup.ok && /Viesearch/.test(dup.message) && !/Brave/.test(dup.message));
     const d = new SubmissionGuard(cfg);
     const x = d.tryAcquire("a");
     assert.ok(x.ok);

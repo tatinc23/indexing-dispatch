@@ -3,7 +3,7 @@
 // Every number, status and sentence on screen comes from a tool result (src/contract.ts, SubmitResult) or from what the
 // user typed. Nothing is seeded or defaulted.
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import type { AuditResult, CanvasProps, CloudflareBaseline, IndexNowResult } from "../../src/contract.js";
+import type { AuditResult, CanvasProps, CloudflareBaseline } from "../../src/contract.js";
 import type { SubmitResult } from "../../src/schema.js";
 import {
   BRAVE_STATUS_LABEL,
@@ -20,18 +20,16 @@ import {
   buildRecheckPrompt,
   buildSocialDrafts,
   cloudflarePhase,
-  defaultKeyLocation,
   domainLabel,
+  emailProblem,
   formatBytes,
   formatMs,
   formatNumber,
   gapCount,
   hostsOf,
-  indexNowKeyProblem,
-  indexNowPhase,
   initialUrlText,
   parseUrlList,
-  planIndexNow,
+  planViesearch,
   suggestedFilesBundle,
   unitStatus,
   urlsWithFacts,
@@ -45,7 +43,7 @@ import {
 
 export interface Runner {
   brave(args: { targetUrl: string }): Promise<SubmitResult>;
-  indexNow(args: { host: string; key: string; urls: string[]; keyLocation?: string }): Promise<IndexNowResult>;
+  viesearch(args: { targetUrl: string; contactEmail: string }): Promise<SubmitResult>;
   audit(args: { targetUrl: string; strategy?: "mobile" | "desktop" }): Promise<AuditResult>;
   cloudflare(args: { zoneId: string; previous?: CloudflareBaseline }): Promise<CloudflareBaseline>;
 }
@@ -251,18 +249,16 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
   const stopRef = useRef(false);
 
   const [urlText, setUrlText] = useState(() => initialUrlText(props));
-  const [included, setIncluded] = useState<Record<ToolId, boolean>>({ brave: true, indexnow: false, audit: true, cloudflare: false });
+  const [included, setIncluded] = useState<Record<ToolId, boolean>>({ brave: true, viesearch: true, audit: true, cloudflare: false });
   const [viewing, setViewing] = useState<ToolId>("brave");
-  const [key, setKey] = useState("");
-  const [keyLocation, setKeyLocation] = useState("");
+  const [email, setEmail] = useState("");
   const [zoneId, setZoneId] = useState("");
   const [strategy, setStrategy] = useState<"mobile" | "desktop">("mobile");
 
   const [running, setRunning] = useState(false);
   const [braveRows, setBraveRows] = useState<BraveRow[]>([]);
   const [auditRows, setAuditRows] = useState<AuditRow[]>([]);
-  const [indexNow, setIndexNow] = useState<Single<IndexNowResult>>({ running: false });
-  const [indexNowUrls, setIndexNowUrls] = useState<string[]>([]);
+  const [viesearchRows, setViesearchRows] = useState<BraveRow[]>([]);
   const [cloudflare, setCloudflare] = useState<Single<CloudflareBaseline>>({ running: false });
   const [live, setLive] = useState("");
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
@@ -279,13 +275,13 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
 
   // The Cloudflare unit cannot run when the server does not have it.
   const useCf = included.cloudflare && cfOn;
-  const indexPlan = useMemo(() => planIndexNow(urls, key.trim(), keyLocation), [urls, key, keyLocation]);
+  const viesearchPlan = useMemo(() => planViesearch(urls, email), [urls, email]);
   const zoneIssue = zoneIdProblem(zoneId.trim());
 
   const blockers: string[] = [];
   if (urls.length === 0) blockers.push("Add at least one valid URL.");
-  if (!included.brave && !included.indexnow && !included.audit && !useCf) blockers.push("Include at least one unit in the run.");
-  if (included.indexnow && urls.length > 0 && !indexPlan.ok) blockers.push(`IndexNow: ${indexPlan.problem}`);
+  if (!included.brave && !included.viesearch && !included.audit && !useCf) blockers.push("Include at least one unit in the run.");
+  if (included.viesearch && urls.length > 0 && !viesearchPlan.ok) blockers.push(`Viesearch: ${viesearchPlan.problem}`);
   if (useCf && zoneIssue) blockers.push(`Cloudflare: ${zoneIssue}`);
 
   // Toasts
@@ -316,24 +312,12 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
     const seq = sequentialUrls;
 
     // Reset only the units that are about to run.
-    if (included.indexnow) setIndexNow({ running: true });
     if (useCf) setCloudflare({ running: true });
     if (included.audit) setAuditRows(seq.map((url) => ({ url, state: "waiting" })));
     if (included.brave) setBraveRows(seq.map((url) => ({ url, state: "waiting" })));
+    if (included.viesearch) setViesearchRows(seq.map((url) => ({ url, state: "waiting" })));
 
     const stopped = () => stopRef.current;
-
-    if (included.indexnow && indexPlan.args) {
-      try {
-        setIndexNowUrls(indexPlan.args.urls);
-        const res = await r.indexNow(indexPlan.args);
-        setIndexNow({ running: false, result: res });
-        setLive(`IndexNow: ${res.status}.`);
-      } catch (e) {
-        setIndexNow({ running: false, error: errText(e) });
-        setLive("IndexNow failed.");
-      }
-    }
 
     if (included.audit) {
       for (let i = 0; i < seq.length; i++) {
@@ -388,6 +372,27 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
       }
     }
 
+    // Viesearch after Brave: one URL per call, strictly sequential, using the visitor's own email. Never retried here.
+    if (included.viesearch && viesearchPlan.args) {
+      const address = viesearchPlan.args.email;
+      for (let i = 0; i < seq.length; i++) {
+        if (stopped()) {
+          setViesearchRows((rows) => rows.map((row, j) => (j >= i ? { ...row, state: "skipped" } : row)));
+          break;
+        }
+        setViesearchRows((rows) => rows.map((row, j) => (j === i ? { ...row, state: "running" } : row)));
+        setLive(`Viesearch: submitting ${i + 1} of ${seq.length}.`);
+        try {
+          const res = await r.viesearch({ targetUrl: seq[i], contactEmail: address });
+          setViesearchRows((rows) => rows.map((row, j) => (j === i ? { ...row, state: "done", result: res } : row)));
+          setLive(`Viesearch ${i + 1} of ${seq.length}: ${BRAVE_STATUS_LABEL[res.status]}.`);
+        } catch (e) {
+          setViesearchRows((rows) => rows.map((row, j) => (j === i ? { ...row, state: "done", error: errText(e) } : row)));
+          setLive(`Viesearch ${i + 1} of ${seq.length} failed.`);
+        }
+      }
+    }
+
     setRunning(false);
     setLive(stopped() ? "Run stopped." : "Run finished.");
   };
@@ -414,26 +419,28 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
             : "ready";
   const auditProgress = `${auditRows.filter((x) => x.state === "done").length}/${auditRows.length}`;
 
-  const indexPh: ToolPhase = indexNow.running ? "running" : indexNow.error ? "error" : indexNow.result ? indexNowPhase(indexNow.result) : "idle";
+  const viesearchDone = viesearchRows.filter((x) => x.result).map((x) => x.result as SubmitResult);
+  const viesearchErrors = viesearchRows.filter((x) => x.error).length;
+  const viesearchBusy = viesearchRows.some((x) => x.state === "running" || x.state === "waiting");
+  const viesearchPh: ToolPhase = viesearchBusy ? "running" : viesearchRows.length === 0 ? "idle" : viesearchErrors > 0 ? "error" : bravePhase(viesearchDone);
+  const viesearchProgress = `${viesearchRows.filter((x) => x.state === "done").length}/${viesearchRows.length}`;
+
   const cfPh: ToolPhase = cloudflare.running ? "running" : cloudflare.error ? "error" : cloudflare.result ? cloudflarePhase(cloudflare.result) : "idle";
 
-  const facts: Facts = { brave: braveDone, indexNow: indexNow.result, indexNowUrls, audits: auditOk };
+  const facts: Facts = { brave: braveDone, viesearch: viesearchDone, audits: auditOk };
   const baseline = cloudflare.result?.status === "ok" ? cloudflare.result : undefined;
-  const hasResults = braveDone.length > 0 || !!indexNow.result || auditOk.length > 0 || !!cloudflare.result;
+  const hasResults = braveDone.length > 0 || viesearchDone.length > 0 || auditOk.length > 0 || !!cloudflare.result;
 
-  const phases: Record<ToolId, ToolPhase> = { brave: bravePh, indexnow: indexPh, audit: auditPh, cloudflare: cfPh };
-  const progress: Partial<Record<ToolId, string>> = { brave: braveProgress, audit: auditProgress };
+  const phases: Record<ToolId, ToolPhase> = { brave: bravePh, viesearch: viesearchPh, audit: auditPh, cloudflare: cfPh };
+  const progress: Partial<Record<ToolId, string>> = { brave: braveProgress, viesearch: viesearchProgress, audit: auditProgress };
   const noUrls = urls.length === 0;
   const blocked: Record<ToolId, boolean> = {
     brave: noUrls,
     audit: noUrls,
-    indexnow: noUrls || !indexPlan.ok,
+    viesearch: noUrls || !viesearchPlan.ok,
     cloudflare: !!zoneIssue,
   };
-  const enabled: Record<ToolId, boolean> = { brave: true, indexnow: true, audit: true, cloudflare: cfOn };
-
-  const keyHost = hosts.length === 1 ? hosts[0] : "<host>";
-  const keyFileUrl = defaultKeyLocation(keyHost, key.trim() || "<key>");
+  const enabled: Record<ToolId, boolean> = { brave: true, viesearch: true, audit: true, cloudflare: cfOn };
 
   const reset = () => {
     if (running) return;
@@ -445,8 +452,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
     setUrlText(initialUrlText(props));
     setBraveRows([]);
     setAuditRows([]);
-    setIndexNow({ running: false });
-    setIndexNowUrls([]);
+    setViesearchRows([]);
     setCloudflare({ running: false });
     setDrawer(null);
     setLive("Workspace reset.");
@@ -468,7 +474,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
   // Text in the receipt bar's right corner. Only observed facts.
   const barText: Record<ToolId, string> = {
     brave: braveRows.length === 0 ? "NOT RUN" : braveBusy ? `RUNNING ${braveProgress}` : braveSummary(braveDone, braveRows.length).toUpperCase(),
-    indexnow: indexNow.running ? "RUNNING" : indexNow.result ? indexNowLabel(indexNow.result).toUpperCase() : indexNow.error ? "FAILED" : "NOT RUN",
+    viesearch: viesearchRows.length === 0 ? "NOT RUN" : viesearchBusy ? `RUNNING ${viesearchProgress}` : braveSummary(viesearchDone, viesearchRows.length).toUpperCase(),
     audit: auditRows.length === 0 ? "NOT RUN" : auditBusy ? `RUNNING ${auditProgress}` : `${auditOk.length} OF ${auditRows.length} READ`,
     cloudflare: !cfOn ? "SELF-HOST ONLY" : cloudflare.running ? "RUNNING" : cloudflare.result ? cloudflare.result.status.toUpperCase().replace("_", " ") : cloudflare.error ? "FAILED" : "NOT RUN",
   };
@@ -487,7 +493,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
             <Logo />
             <span>Indexing Dispatch</span>
           </h1>
-          <p className="tagline">Submit URLs, audit AI readiness, snapshot Cloudflare traffic.</p>
+          <p className="tagline">Send pages to Brave and Viesearch, audit AI readiness, snapshot Cloudflare traffic.</p>
           <div className="head-top">
             <button type="button" className="ghost" onClick={reset} disabled={running}>
               <Icon name="reset" />
@@ -592,9 +598,9 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
                     {parsed.problems.length > 5 && <li>{parsed.problems.length - 5} more.</li>}
                   </ul>
                 )}
-                {overLimit > 0 && (included.brave || included.audit) && (
+                {overLimit > 0 && (included.brave || included.viesearch || included.audit) && (
                   <p className="hint warn">
-                    Brave and the audit take the first {MAX_SEQUENTIAL_URLS} URLs per run. {overLimit} more will not run until you start another run.
+                    Brave, Viesearch and the audit take the first {MAX_SEQUENTIAL_URLS} URLs per run. {overLimit} more will not run until you start another run.
                   </p>
                 )}
                 <p id="run-hint" className="hint">
@@ -626,17 +632,13 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
                 {viewing === "brave" && (
                   <BravePanel rows={braveRows} included={included.brave} />
                 )}
-                {viewing === "indexnow" && (
-                  <IndexNowPanel
-                    included={included.indexnow}
-                    state={indexNow}
-                    keyValue={key}
-                    setKey={setKey}
-                    keyLocation={keyLocation}
-                    setKeyLocation={setKeyLocation}
-                    keyFileUrl={keyFileUrl}
-                    keyHost={keyHost}
-                    problem={urls.length > 0 && !indexPlan.ok ? indexPlan.problem : undefined}
+                {viewing === "viesearch" && (
+                  <ViesearchPanel
+                    rows={viesearchRows}
+                    included={included.viesearch}
+                    email={email}
+                    setEmail={setEmail}
+                    problem={urls.length > 0 && !viesearchPlan.ok ? viesearchPlan.problem : undefined}
                     disabled={running}
                   />
                 )}
@@ -667,8 +669,17 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
                         </button>
                       )}
                     </div>
-                    {social.length === 0 && <p className="hint">A social draft needs a result from Brave, IndexNow or the audit.</p>}
+                    {social.length === 0 && <p className="hint">A social draft needs a result from Brave, Viesearch or the audit.</p>}
                     {auditOk.length === 0 && <p className="hint">The LLM patch comes from the site audit. Include Unit 03 and run it.</p>}
+                    {props.morePlacesUrl && (
+                      <p className="hint">
+                        More places to submit yourself:{" "}
+                        <a href={props.morePlacesUrl} target="_blank" rel="nofollow noopener">
+                          directories no agent can submit to
+                        </a>
+                        .
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -756,7 +767,7 @@ function BravePanel({ rows, included }: { rows: BraveRow[]; included: boolean })
           )}
           <ul className="res-list" aria-label="Brave submissions">
             {rows.map((row) => (
-              <BraveItem key={row.url} row={row} />
+              <SubmissionItem key={row.url} row={row} site="Brave" />
             ))}
           </ul>
         </>
@@ -765,7 +776,60 @@ function BravePanel({ rows, included }: { rows: BraveRow[]; included: boolean })
   );
 }
 
-function BraveItem({ row }: { row: BraveRow }) {
+function ViesearchPanel(p: { rows: BraveRow[]; included: boolean; email: string; setEmail: (v: string) => void; problem?: string; disabled: boolean }) {
+  const done = p.rows.filter((r) => r.result).map((r) => r.result as SubmitResult);
+  const t = braveTotals(done);
+  return (
+    <>
+      <Note>One URL at a time using your email address below. Viesearch's form asks for the site's name, URL, description and your email; the panel fills the URL and email and leaves the rest blank. "Accepted" means Viesearch's form confirmed it received the URL, not that the site is listed.</Note>
+      <NotIncluded included={p.included} />
+      <div className="opts">
+        <label htmlFor="vsemail" className="field-label">
+          Your email address for Viesearch
+        </label>
+        <input
+          id="vsemail"
+          className="input"
+          type="email"
+          value={p.email}
+          onChange={(e) => p.setEmail(e.target.value)}
+          disabled={p.disabled}
+          spellCheck={false}
+          autoCapitalize="off"
+          autoComplete="email"
+          aria-describedby="vsemail-hint"
+          aria-invalid={p.email.trim() !== "" && emailProblem(p.email.trim()) !== null}
+        />
+        <p id="vsemail-hint" className="hint">
+          Goes only to Viesearch with the submission. The server never stores it or echoes it back.
+        </p>
+        {p.problem && p.included && <p className="hint bad">{p.problem}</p>}
+      </div>
+      {p.rows.length === 0 ? (
+        p.included && <p className="empty">No run yet. Initiate a run to submit the URLs above.</p>
+      ) : (
+        <>
+          {done.length > 0 && (
+            <Tiles
+              tiles={[
+                { k: "Accepted", v: `${t.accepted} of ${p.rows.length}`, tone: t.accepted === p.rows.length ? "ok" : "plain" },
+                { k: "Not accepted", v: String(t.other), tone: t.other > 0 ? "warn" : "plain" },
+                { k: "Time in Viesearch", v: formatMs(t.ms) },
+              ]}
+            />
+          )}
+          <ul className="res-list" aria-label="Viesearch submissions">
+            {p.rows.map((row) => (
+              <SubmissionItem key={row.url} row={row} site="Viesearch" />
+            ))}
+          </ul>
+        </>
+      )}
+    </>
+  );
+}
+
+function SubmissionItem({ row, site }: { row: BraveRow; site: "Brave" | "Viesearch" }) {
   const r = row.result;
   const phase: ToolPhase =
     row.state === "running" ? "running" : row.state === "waiting" || row.state === "skipped" ? "idle" : row.error ? "error" : r?.status === "accepted" ? "ready" : r?.status === "error" ? "error" : "warning";
@@ -786,14 +850,14 @@ function BraveItem({ row }: { row: BraveRow }) {
             <Rows
               rows={[
                 ["Time", formatMs(r.durationMs)],
-                ...(r.confirmationText ? ([["Brave said", `"${r.confirmationText}"`]] as [string, ReactNode][]) : []),
+                ...(r.confirmationText ? ([[`${site} said`, `"${r.confirmationText}"`]] as [string, ReactNode][]) : []),
                 ...(r.errorCode ? ([["Reason", r.errorCode]] as [string, ReactNode][]) : []),
                 ...(r.retryAfterSeconds ? ([["Do not retry before", `${r.retryAfterSeconds} s`]] as [string, ReactNode][]) : []),
               ]}
             />
             {r.diagnostics && r.diagnostics.observed.length > 0 && (
               <>
-                <p className="mini">What Brave's page showed, in order</p>
+                <p className="mini">What {site}'s page showed, in order</p>
                 <ol className="observed">
                   {r.diagnostics.observed.map((o, i) => (
                     <li key={i}>{o}</li>
@@ -801,113 +865,11 @@ function BraveItem({ row }: { row: BraveRow }) {
                 </ol>
               </>
             )}
-            {r.diagnostics?.domExcerpt && <Pre label="Text on Brave's page at the end of the run">{r.diagnostics.domExcerpt}</Pre>}
+            {r.diagnostics?.domExcerpt && <Pre label={`Text on ${site}'s page at the end of the run`}>{r.diagnostics.domExcerpt}</Pre>}
           </Detail>
         </>
       )}
     </li>
-  );
-}
-
-function indexNowLabel(r: IndexNowResult): string {
-  switch (r.status) {
-    case "submitted":
-      return `Submitted ${r.urlCount} URL${r.urlCount === 1 ? "" : "s"}`;
-    case "key_not_verified":
-      return "Key file not verified";
-    case "rejected":
-      return "Rejected";
-    case "blocked":
-      return "Blocked";
-    default:
-      return "Failed";
-  }
-}
-
-function IndexNowPanel(p: {
-  included: boolean;
-  state: Single<IndexNowResult>;
-  keyValue: string;
-  setKey: (v: string) => void;
-  keyLocation: string;
-  setKeyLocation: (v: string) => void;
-  keyFileUrl: string;
-  keyHost: string;
-  problem?: string;
-  disabled: boolean;
-}) {
-  const r = p.state.result;
-  return (
-    <>
-      <Note>One request to api.indexnow.org, which the protocol shares with participating engines. The server first fetches your key file and sends nothing if it does not match the key.</Note>
-      <NotIncluded included={p.included} />
-      <div className="opts">
-        <label htmlFor="inkey" className="field-label">
-          Your IndexNow key
-        </label>
-        <input
-          id="inkey"
-          className="input"
-          value={p.keyValue}
-          onChange={(e) => p.setKey(e.target.value)}
-          disabled={p.disabled}
-          spellCheck={false}
-          autoCapitalize="off"
-          autoComplete="off"
-          aria-describedby="inkey-hint"
-          aria-invalid={p.keyValue.trim() !== "" && indexNowKeyProblem(p.keyValue.trim()) !== null}
-        />
-        <p id="inkey-hint" className="hint">
-          The key file must already be live at <code>{p.keyFileUrl}</code> and contain the key.
-        </p>
-        <Detail summary="Key file is somewhere else">
-          <label htmlFor="inloc" className="field-label">
-            Key file location (optional)
-          </label>
-          <input
-            id="inloc"
-            className="input"
-            value={p.keyLocation}
-            onChange={(e) => p.setKeyLocation(e.target.value)}
-            disabled={p.disabled}
-            placeholder={`https://${p.keyHost}/keys/your-key.txt`}
-            spellCheck={false}
-            autoCapitalize="off"
-            autoComplete="off"
-          />
-          <p className="hint">Must be on the same host as the URLs.</p>
-        </Detail>
-        {p.problem && p.included && <p className="hint bad">{p.problem}</p>}
-      </div>
-      {p.state.error && <p className="err-text">{p.state.error}</p>}
-      {p.state.running && <p className="empty">Sending the request...</p>}
-      {r && (
-        <>
-          <Tiles
-            tiles={[
-              { k: "Status", v: indexNowLabel(r), tone: toneOfPhase(indexNowPhase(r)) },
-              { k: "URLs sent", v: formatNumber(r.urlCount) },
-              { k: "Key file", v: r.keyVerified ? "Matched the key" : "Not verified", tone: r.keyVerified ? "ok" : "warn" },
-            ]}
-          />
-          <p className="res-msg">{r.message}</p>
-          <Rows rows={[["Host", r.host], ["Key file", r.keyLocation], ["Time", formatMs(r.durationMs)]]} />
-          {r.engines.length > 0 && (
-            <ul className="res-list" aria-label="Endpoint responses">
-              {r.engines.map((e) => (
-                <li className="res" key={e.endpoint}>
-                  <div className="res-head">
-                    <span className="url">{e.engine}</span>
-                    <Status phase={e.ok ? "ready" : "error"} text={e.httpStatus ? `HTTP ${e.httpStatus}` : e.ok ? "OK" : "No answer"} />
-                  </div>
-                  <p className="res-msg">{e.message}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
-    </>
   );
 }
 

@@ -1,15 +1,13 @@
 // Pure helpers for the submission canvas. No React, no DOM, no network: everything here is unit-tested
 // (test/canvas-lib.test.ts). Every string built here uses only values that were observed or typed by the user.
-import type { AuditResult, CanvasProps, CloudflareBaseline, IndexNowResult } from "../../src/contract.js";
+import type { AuditResult, CanvasProps, CloudflareBaseline } from "../../src/contract.js";
 import type { SubmitResult } from "../../src/schema.js";
 
-export type ToolId = "brave" | "indexnow" | "audit" | "cloudflare";
+export type ToolId = "brave" | "viesearch" | "audit" | "cloudflare";
 export type ToolPhase = "idle" | "running" | "ready" | "warning" | "error";
 
 /** Brave and audit run one URL per call, sequentially. Beyond this many URLs a single click does not go. */
 export const MAX_SEQUENTIAL_URLS = 10;
-/** IndexNow protocol batch limit used by this server (see docs/specs/2026-10-27-discovery-suite.md). */
-export const MAX_INDEXNOW_URLS = 100;
 export const MAX_INPUT_URLS = 100;
 
 // ---------- props ----------
@@ -23,6 +21,7 @@ export function normalizeProps(raw: unknown): CanvasProps {
     ...(typeof r.domain === "string" && r.domain.trim() ? { domain: r.domain.trim() } : {}),
     mode: r.mode === "autonomous" ? "autonomous" : "interactive",
     enabledTools: { cloudflare: et.cloudflare === true, pageSpeed: et.pageSpeed === true },
+    ...(typeof r.morePlacesUrl === "string" && r.morePlacesUrl ? { morePlacesUrl: r.morePlacesUrl } : {}),
   };
 }
 
@@ -92,53 +91,27 @@ export function hostsOf(urls: string[]): string[] {
   return [...new Set(urls.map((u) => new URL(u).host.toLowerCase()))];
 }
 
-// ---------- IndexNow ----------
+// ---------- Viesearch ----------
 
-/** indexnow.org/documentation (checked 2026-10-27): 8 to 128 characters, a-z A-Z 0-9 and dashes. */
-export function indexNowKeyProblem(key: string): string | null {
-  if (!key) return "Enter your IndexNow key.";
-  if (key.length < 8 || key.length > 128) return "A key is 8 to 128 characters.";
-  if (!/^[A-Za-z0-9-]+$/.test(key)) return "A key uses letters, digits and dashes only.";
+/** Viesearch's submit form needs the visitor's own contact email. Light check only; the server validates it. */
+export function emailProblem(email: string): string | null {
+  if (!email.trim()) return "Enter your email address for Viesearch.";
+  if (/\s/.test(email) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return "That email address does not look complete.";
   return null;
 }
 
-export function defaultKeyLocation(host: string, key: string): string {
-  return `https://${host}/${key}.txt`;
-}
-
-export interface IndexNowPlan {
+export interface ViesearchPlan {
   ok: boolean;
   problem?: string;
-  host?: string;
-  args?: { host: string; key: string; urls: string[]; keyLocation?: string };
+  args?: { urls: string[]; email: string };
 }
 
-export function planIndexNow(urls: string[], key: string, keyLocation: string): IndexNowPlan {
+export function planViesearch(urls: string[], email: string): ViesearchPlan {
   if (urls.length === 0) return { ok: false, problem: "Add at least one URL." };
-  const hosts = hostsOf(urls);
-  if (hosts.length > 1) {
-    return { ok: false, problem: `IndexNow needs every URL on one host. Found ${hosts.length}: ${hosts.join(", ")}.` };
-  }
-  if (urls.length > MAX_INDEXNOW_URLS) {
-    return { ok: false, problem: `IndexNow takes up to ${MAX_INDEXNOW_URLS} URLs per request.` };
-  }
-  const keyIssue = indexNowKeyProblem(key);
-  if (keyIssue) return { ok: false, problem: keyIssue };
-  const loc = keyLocation.trim();
-  if (loc) {
-    try {
-      const u = new URL(loc);
-      if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("scheme");
-      if (u.host.toLowerCase() !== hosts[0]) return { ok: false, problem: `The key file must be on ${hosts[0]}.` };
-    } catch {
-      return { ok: false, problem: "Key file location must be a full URL." };
-    }
-  }
-  return {
-    ok: true,
-    host: hosts[0],
-    args: { host: hosts[0], key, urls, ...(loc ? { keyLocation: loc } : {}) },
-  };
+  const address = email.trim();
+  const emailIssue = emailProblem(address);
+  if (emailIssue) return { ok: false, problem: emailIssue };
+  return { ok: true, args: { urls, email: address } };
 }
 
 // ---------- Cloudflare ----------
@@ -165,12 +138,6 @@ export function braveSummary(results: SubmitResult[], total: number): string {
   const parts = [`${accepted} of ${total} accepted`];
   if (pending > 0) parts.push(`${pending} not run`);
   return parts.join(", ");
-}
-
-export function indexNowPhase(r: IndexNowResult): ToolPhase {
-  if (r.status === "submitted") return r.engines.length > 0 && r.engines.every((e) => e.ok) ? "ready" : "warning";
-  if (r.status === "key_not_verified") return "warning";
-  return "error";
 }
 
 export function auditPhase(r: AuditResult): ToolPhase {
@@ -221,7 +188,7 @@ export interface UnitMeta {
 /** Card copy. Each sentence states only what the tool really does (see SKILL.md and docs/engines-2026-10-27.md). */
 export const UNITS: UnitMeta[] = [
   { id: "brave", num: "01", title: "Brave Search Indexer", blurb: "Fills Brave's submit form in a real headless browser and reports what Brave showed." },
-  { id: "indexnow", num: "02", title: "IndexNow", blurb: "One request, shared with participating engines. Needs your key file hosted on your site." },
+  { id: "viesearch", num: "02", title: "Viesearch", blurb: "Fills Viesearch's submit form with your URL and email, leaves the rest blank, and reports what Viesearch showed." },
   { id: "audit", num: "03", title: "Site Audit", blurb: "Title, robots.txt, llms.txt, sitemap, structured data." },
   { id: "cloudflare", num: "04", title: "Cloudflare Baseline", blurb: "Reads requests, bytes and AI bot requests for one zone. You keep the result to compare later." },
 ];
@@ -271,14 +238,12 @@ export function gapCount(a: AuditResult): number {
 
 export interface Facts {
   brave: SubmitResult[];
-  indexNow?: IndexNowResult;
-  /** The URLs that were sent in that IndexNow request (the result only carries a count). */
-  indexNowUrls?: string[];
+  viesearch: SubmitResult[];
   audits: AuditResult[];
 }
 
 export function hasAnyFacts(f: Facts): boolean {
-  return f.brave.length > 0 || !!f.indexNow || f.audits.some((a) => a.status === "ok");
+  return f.brave.length > 0 || f.viesearch.length > 0 || f.audits.some((a) => a.status === "ok");
 }
 
 /** URLs that have at least one observed result, in first-seen order. */
@@ -288,7 +253,7 @@ export function urlsWithFacts(f: Facts): string[] {
     if (!out.includes(u)) out.push(u);
   };
   f.brave.forEach((r) => add(r.targetUrl));
-  (f.indexNowUrls ?? []).forEach((u) => f.indexNow && add(u));
+  f.viesearch.forEach((r) => add(r.targetUrl));
   f.audits.filter((a) => a.status === "ok").forEach((a) => add(a.targetUrl));
   return out;
 }
@@ -328,9 +293,17 @@ export interface SocialDrafts {
   linkedinCount: number;
 }
 
+const VIESEARCH_POST_WORD: Record<SubmitResult["status"], string> = {
+  accepted: "accepted it",
+  rejected: "rejected it",
+  verification_required: "asked for verification",
+  timeout: "no clear answer",
+  error: "could not be completed",
+};
+
 interface UrlFacts {
   brave?: string;
-  indexNow?: string;
+  viesearch?: string;
   audit?: string;
   auditLong?: string[];
   title?: string;
@@ -340,15 +313,8 @@ function factsForUrl(f: Facts, url: string): UrlFacts {
   const out: UrlFacts = {};
   const b = f.brave.find((r) => r.targetUrl === url);
   if (b) out.brave = `Brave Search submit form: ${BRAVE_POST_WORD[b.status]}.`;
-  if (f.indexNow && (f.indexNowUrls ?? []).includes(url)) {
-    const r = f.indexNow;
-    if (r.status === "submitted") {
-      const ok = r.engines.filter((e) => e.ok).length;
-      out.indexNow = `IndexNow: submitted (${ok} of ${r.engines.length} endpoint${r.engines.length === 1 ? "" : "s"} answered OK).`;
-    } else if (r.status === "key_not_verified") out.indexNow = "IndexNow: not sent, the key file was not verified.";
-    else if (r.status === "rejected") out.indexNow = "IndexNow: rejected.";
-    else out.indexNow = "IndexNow: could not be completed.";
-  }
+  const v = f.viesearch.find((r) => r.targetUrl === url);
+  if (v) out.viesearch = `Viesearch submit form: ${VIESEARCH_POST_WORD[v.status]}.`;
   const a = f.audits.find((x) => x.targetUrl === url && x.status === "ok");
   if (a) {
     const gaps = gapCount(a);
@@ -378,9 +344,9 @@ function factsForUrl(f: Facts, url: string): UrlFacts {
  */
 export function buildSocialDrafts(f: Facts, url: string): SocialDrafts | null {
   const u = factsForUrl(f, url);
-  if (!u.brave && !u.indexNow && !u.audit) return null;
+  if (!u.brave && !u.viesearch && !u.audit) return null;
 
-  const xLines = [url, u.brave, u.indexNow, u.audit].filter((l): l is string => !!l);
+  const xLines = [url, u.brave, u.viesearch, u.audit].filter((l): l is string => !!l);
   const keep: string[] = [];
   for (const line of xLines) {
     const next = [...keep, line].join("\n");
@@ -391,7 +357,7 @@ export function buildSocialDrafts(f: Facts, url: string): SocialDrafts | null {
   const host = new URL(url).host;
   const lines: string[] = [`Checked ${u.title ?? host} (${url}).`, "", "What the tools reported:"];
   if (u.brave) lines.push(`- ${u.brave}`);
-  if (u.indexNow) lines.push(`- ${u.indexNow}`);
+  if (u.viesearch) lines.push(`- ${u.viesearch}`);
   if (u.auditLong) lines.push(`- Audit: ${u.auditLong.join("; ")}.`);
   const linkedin = lines.join("\n");
 

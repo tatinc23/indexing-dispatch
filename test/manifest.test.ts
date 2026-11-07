@@ -6,12 +6,12 @@ import {
   auditSiteDef,
   renderSubmissionCanvasDef,
   submitBraveUrlDef,
-  submitIndexnowDef,
+  submitViesearchUrlDef,
   toolInvocationMeta,
 } from "../src/tool-defs.js";
 
 const manifest = JSON.parse(readFileSync(new URL("../site/mcp.json", import.meta.url), "utf8"));
-const defs = [submitBraveUrlDef, auditSiteDef, submitIndexnowDef, renderSubmissionCanvasDef];
+const defs = [submitBraveUrlDef, auditSiteDef, submitViesearchUrlDef, renderSubmissionCanvasDef];
 
 test("mcp.json lists exactly the tools the server registers", () => {
   assert.deepEqual([...manifest.tools].sort(), defs.map((d) => d.name).sort());

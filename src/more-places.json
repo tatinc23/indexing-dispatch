@@ -1,0 +1,59 @@
+{
+  "checked": "2026-11-07",
+  "groups": [
+    {
+      "title": "Review sites",
+      "sites": [
+        { "name": "G2, Capterra, GetApp & Software Advice", "submitUrl": "https://www.g2.com/products/new", "tag": "free, account", "note": "One form lists you on all four.", "verifiedOn": "2026-11-07" },
+        { "name": "TrustRadius", "submitUrl": "https://www.trustradius.com/static/vendor-submission-requirements", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "AlternativeTo", "submitUrl": "https://alternativeto.net/", "tag": "free, account", "note": "Suggest a new application from your signed-in account menu.", "verifiedOn": "2026-11-07" },
+        { "name": "SaaSHub", "submitUrl": "https://www.saashub.com/services/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "GoodFirms", "submitUrl": "https://www.goodfirms.co/get-listed", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "SoftwareSuggest", "submitUrl": "https://www.softwaresuggest.com/vendors", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "Crozdesk", "submitUrl": "https://crozdesk.com/", "tag": "free, account", "note": "Apply to list your software from the homepage.", "verifiedOn": "2026-11-07" },
+        { "name": "SelectHub", "submitUrl": "https://www.selecthub.com/seller/", "tag": "sales contact", "note": "No public form; starts with a sales conversation.", "verifiedOn": "2026-11-07" },
+        { "name": "SaaSWorthy", "submitUrl": "https://www.saasworthy.com/offerings", "tag": "free", "note": "Name, work email and product URL; the team builds the profile.", "verifiedOn": "2026-11-07" }
+      ]
+    },
+    {
+      "title": "Startup launchpads",
+      "sites": [
+        { "name": "Product Hunt", "submitUrl": "https://www.producthunt.com/", "tag": "free, account", "note": "Launches run for 24 hours; the account must be at least a week old.", "verifiedOn": "2026-11-07" },
+        { "name": "Crunchbase", "submitUrl": "https://www.crunchbase.com/add-new", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "Wellfound", "submitUrl": "https://wellfound.com/onboarding/recruit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "F6S", "submitUrl": "https://www.f6s.com/", "tag": "free, account", "note": "Add your startup from a signed-in profile.", "verifiedOn": "2026-11-07" },
+        { "name": "StartupBlink", "submitUrl": "https://www.startupblink.com/", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "StartupStash", "submitUrl": "https://startupstash.com/add-listing/", "tag": "free", "verifiedOn": "2026-11-07" },
+        { "name": "Microlaunch", "submitUrl": "https://microlaunch.net/", "tag": "account", "note": "Free lane unverified; the site pushes paid packs.", "verifiedOn": "2026-11-07" },
+        { "name": "Uneed", "submitUrl": "https://www.uneed.best/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "Fazier", "submitUrl": "https://fazier.com/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "twelve.tools", "submitUrl": "https://twelve.tools/submit", "tag": "free, needs homepage badge", "note": "Free listing needs a badge linking back to twelve.tools.", "verifiedOn": "2026-11-07" },
+        { "name": "WhatLaunched", "submitUrl": "https://whatlaunched.today/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "Dodo Payments Index", "submitUrl": "https://index.dodopayments.com/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "Peerlist", "submitUrl": "https://peerlist.io/launchpad", "tag": "free, account", "note": "Weekly launches on Mondays.", "verifiedOn": "2026-11-07" },
+        { "name": "SideProjectors", "submitUrl": "https://www.sideprojectors.com/", "tag": "free, account", "note": "Submit a project from a signed-in account.", "verifiedOn": "2026-11-07" },
+        { "name": "StarterStory", "submitUrl": "https://www.starterstory.com/share", "tag": "free, account", "note": "Editorial interview; no placement guaranteed.", "verifiedOn": "2026-11-07" },
+        { "name": "startupfa.me", "submitUrl": "https://startupfa.me/submit", "tag": "free, account", "verifiedOn": "2026-11-07" }
+      ]
+    },
+    {
+      "title": "AI & dev directories",
+      "sites": [
+        { "name": "FutureTools", "submitUrl": "https://futuretools.io/submit-a-tool", "tag": "free", "verifiedOn": "2026-11-07" },
+        { "name": "topai.tools", "submitUrl": "https://topaitools.net/submit", "tag": "free", "note": "Not topai.tools, which is paid-only.", "verifiedOn": "2026-11-07" },
+        { "name": "dang.ai", "submitUrl": "https://dang.ai/pricing", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "ToolPilot", "submitUrl": "https://www.toolpilot.ai/pages/submit-your-ai-tool", "tag": "free, needs backlink", "note": "Free listings need a badge linking back to ToolPilot.", "verifiedOn": "2026-11-07" },
+        { "name": "PeerPush", "submitUrl": "https://peerpush.com/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "mcp.so", "submitUrl": "https://mcp.so/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "StackShare", "submitUrl": "https://stackshare.io/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "SourceForge", "submitUrl": "https://sourceforge.net/p/add_project", "tag": "free, account", "note": "Open-source projects only.", "verifiedOn": "2026-11-07" },
+        { "name": "LibHunt", "submitUrl": "https://www.libhunt.com/repo/submit", "tag": "free", "note": "Open-source GitHub repos only.", "verifiedOn": "2026-11-07" },
+        { "name": "Brownbook", "submitUrl": "https://www.brownbook.net/add-business", "tag": "free", "verifiedOn": "2026-11-07" },
+        { "name": "LinkCentre", "submitUrl": "https://www.linkcentre.com/addurl/", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "GetLatka", "submitUrl": "https://getlatka.com/add", "tag": "free, account", "verifiedOn": "2026-11-07" },
+        { "name": "There's An AI For That", "submitUrl": "https://theresanaiforthat.com/launch/", "tag": "paid only", "verifiedOn": "2026-11-07" },
+        { "name": "topai.tools", "submitUrl": "https://topai.tools/submit", "tag": "paid only", "verifiedOn": "2026-11-07" }
+      ]
+    }
+  ]
+}

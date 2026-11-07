@@ -65,29 +65,48 @@ export const auditResultSchema = z.object({
 });
 export type AuditResult = z.infer<typeof auditResultSchema>;
 
-export const indexNowEngine = z.object({
-  engine: z.string().describe("Endpoint name as the IndexNow protocol documents it, e.g. api.indexnow.org."),
-  endpoint: z.string().describe("The URL that was called."),
-  ok: z.boolean().describe("true if this endpoint accepted the request (HTTP 200 or 202)."),
-  httpStatus: z.number().optional().describe("HTTP status the endpoint answered; absent when the request got no response."),
-  message: z.string().describe("What this endpoint's answer means."),
-});
-
-export const indexNowResultSchema = z.object({
+export const viesearchResultSchema = z.object({
+  targetUrl: z.string().describe("The URL that was submitted, exactly as given."),
   status: z
-    .enum(["submitted", "key_not_verified", "rejected", "blocked", "error"])
+    .enum(["accepted", "rejected", "verification_required", "timeout", "error"])
     .describe(
-      "Outcome. submitted: IndexNow answered HTTP 200 or 202 (received, not a promise of indexing). key_not_verified: the key file could not be fetched or did not contain exactly the key; nothing was sent. rejected: IndexNow refused the request (HTTP 4xx such as 400, 403, 422 or 429); see message. blocked: the key file address was refused by the server's safety check; nothing was sent. error: the input was invalid, a server limit applied, or the request failed or got an unexpected answer; see message.",
+      "Outcome. accepted = Viesearch's page showed an explicit success confirmation. rejected = Viesearch refused it (e.g. 'already a registered user'). verification_required = Viesearch is showing a CAPTCHA or other human check this server will not solve; finish by hand. timeout = submitted but no verdict arrived before the deadline. error = the run failed before submitting (limit, browser failure, unexpected page).",
     ),
-  host: z.string().describe("The host the request was for, lowercased."),
-  urlCount: z.number().describe("Number of URLs in this request; once the URLs have been checked, duplicates are not counted. 0 when the input was refused before the URLs were checked."),
-  keyLocation: z.string().describe("The key file address that was used: the one given, or https://<host>/<key>.txt."),
-  keyVerified: z.boolean().describe("true only if the key file was fetched and held exactly the key before anything was sent to IndexNow."),
-  engines: z.array(indexNowEngine).describe("One entry per IndexNow endpoint contacted; empty when nothing was sent."),
-  message: z.string().describe("Plain-language account of what happened and what to do next. Report it to the user as written."),
+  message: z.string().describe("Plain-language account of what Viesearch showed. Report it to the user as written."),
+  confirmationText: z
+    .string()
+    .optional()
+    .describe("Exact success wording from Viesearch's page, when it showed one. Absent unless status is accepted."),
+  errorCode: z
+    .enum([
+      "busy",
+      "rate_limited",
+      "recently_submitted",
+      "browser_launch_failed",
+      "navigation_failed",
+      "http_error",
+      "unexpected_navigation",
+      "input_not_found",
+      "input_mismatch",
+      "submit_button_not_found",
+      "submit_button_disabled",
+      "unexpected_error",
+    ])
+    .optional()
+    .describe("Machine-readable failure class, present only when status is error or busy/rate_limited."),
+  retryAfterSeconds: z.number().optional().describe("How long to wait before trying again. Present only on busy, rate_limited or recently_submitted."),
   durationMs: z.number().describe("Time the call took, in milliseconds."),
+  diagnostics: z
+    .object({
+      finalUrl: z.string().optional(),
+      observed: z.array(z.string()),
+      domExcerpt: z.string().optional(),
+      screenshotAttached: z.boolean(),
+    })
+    .optional()
+    .describe("What the page showed step by step (email redacted). Present when status is not accepted."),
 });
-export type IndexNowResult = z.infer<typeof indexNowResultSchema>;
+export type ViesearchResult = z.infer<typeof viesearchResultSchema>;
 
 export const cloudflareBaselineSchema = z.object({
   status: z.enum(["ok", "not_configured", "error"]),
@@ -112,5 +131,6 @@ export const canvasPropsSchema = z.object({
     cloudflare: z.boolean().describe("True only if this server offers the Cloudflare baseline tool."),
     pageSpeed: z.boolean().describe("True only if this server has a PageSpeed key, so audits include a PageSpeed result."),
   }).describe("Which optional tools this server instance really has."), // what this server instance really has
+  morePlacesUrl: z.string().optional().describe("Absolute URL of the static more-places page (directories no agent can submit to)."),
 });
 export type CanvasProps = z.infer<typeof canvasPropsSchema>;

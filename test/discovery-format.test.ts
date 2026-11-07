@@ -1,17 +1,19 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { AuditResult, CloudflareBaseline, IndexNowResult } from "../src/contract.js";
-import { auditToolResult, cloudflareToolResult, indexNowToolResult } from "../src/discovery-format.js";
+import type { AuditResult, CloudflareBaseline, ViesearchResult } from "../src/contract.js";
+import { auditToolResult, cloudflareToolResult, viesearchToolResult } from "../src/discovery-format.js";
 
 describe("discovery tool results", () => {
-  it("indexnow: text carries status and message; isError unless submitted", () => {
-    const base: IndexNowResult = { status: "submitted", host: "example.com", urlCount: 2, keyLocation: "https://example.com/k.txt", keyVerified: true, engines: [], message: "IndexNow accepted the request.", durationMs: 12 };
-    const ok = indexNowToolResult(base);
+  it("viesearch: text carries status and message with a more-places line; isError unless accepted", () => {
+    const base: ViesearchResult = { targetUrl: "https://example.com/", status: "accepted", message: "Viesearch confirmed.", confirmationText: "Thank you!", durationMs: 1200 };
+    const ok = viesearchToolResult(base);
     assert.equal(ok.structuredContent, base);
-    assert.match(ok.content[0]!.text, /SUBMITTED/);
-    assert.match(ok.content[0]!.text, /IndexNow accepted/);
+    assert.match(ok.content[0]!.text, /ACCEPTED/);
+    assert.match(ok.content[0]!.text, /Viesearch confirmed/);
+    assert.match(ok.content[0]!.text, /Viesearch said: "Thank you!"/);
+    assert.match(ok.content[0]!.text, /More places to submit yourself: https:\/\/dispatch\.tatinc\.us\/more-places/);
     assert.equal("isError" in ok, false);
-    assert.equal(indexNowToolResult({ ...base, status: "key_not_verified" }).isError, true);
+    assert.equal(viesearchToolResult({ ...base, status: "rejected", confirmationText: undefined }).isError, true);
   });
 
   it("audit: lists findings and suggested file paths, and the PageSpeed state", () => {

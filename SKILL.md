@@ -1,16 +1,16 @@
 ---
 name: indexing-dispatch
-description: Use when the user wants their site found by search engines or AI assistants ("index my site", "submit my URL to Brave", "ping IndexNow", "check my site's AI readiness"). Drives the indexing-dispatch MCP tools and reports only what they observed.
+description: Use when the user wants their site found by search engines or AI assistants ("index my site", "submit my URL to Brave", "submit my URL to Viesearch", "check my site's AI readiness"). Drives the indexing-dispatch MCP tools and reports only what they observed.
 ---
 
 # indexing-dispatch: operating manual for the agent
 
 Tools (all on the `indexing-dispatch` MCP server):
-`audit-site` (read-only), `submit-brave-url`, `submit-indexnow`, `render-submission-canvas`, and `snapshot-cloudflare-baseline` (only listed if the operator configured a Cloudflare token).
+`audit-site` (read-only), `submit-brave-url`, `submit-viesearch-url`, `render-submission-canvas`, and `snapshot-cloudflare-baseline` (only listed if the operator configured a Cloudflare token). Every submit tool's text result ends with one line linking `/more-places`, directories no agent can submit to.
 
 ## Ground rules
 
-- Report what the tools returned. Never say a page "will be indexed", "is indexed" or "will rank". `accepted` / `submitted` means an engine confirmed receipt of the request, nothing more.
+- Report what the tools returned. Never say a page "will be indexed", "is indexed", "will be listed" or "is listed". `accepted` means the site confirmed receipt of the request, nothing more.
 - Never loop or retry a submit tool. One attempt per URL. After a refusal, rate limit, timeout or `busy` result, stop and tell the user what the result said and any retry-after time.
 - Limits are per server instance and held in memory; do not describe them as global.
 - If a tool is not listed, it is not configured on this server. Say so; do not work around it.
@@ -21,7 +21,7 @@ Tools (all on the `indexing-dispatch` MCP server):
 1. Ask for the site URL(s) if not given (public http(s) only).
 2. Run `audit-site` on the main URL (read-only). Summarise `findings`, `suggestedFiles`, and the PageSpeed state (it is included only if the operator configured a key; `skipped` is normal).
 3. Run `submit-brave-url` once per URL, sequentially, waiting for each result (each takes about 10-40 s). Stop the batch if a result is `rate_limited`, `busy` or `verification_required`.
-4. Run `submit-indexnow` only if the user confirms they have created an IndexNow key and already host the key file at the site root (`https://<host>/<key>.txt`, containing only the key). Never invent or suggest a key to reuse. If the result is `key_not_verified`, tell the user exactly what was wrong and what to host; do not retry until they say it is fixed. All URLs must be on the one exact host.
+4. Ask the user for the contact email address they want Viesearch to have. Then run `submit-viesearch-url` once per URL with `contactEmail` set to it, sequentially, waiting for each result. The email goes only to Viesearch: never store it, repeat it, or put it in any other field. If a result says `verification_required`, tell the user to finish at https://viesearch.com/submit instead. `rejected` with "already a registered user" means the URL is already in Viesearch.
 5. Summarise per URL with the status each tool gave.
 
 ## When the user wants to review or configure visually

@@ -2,15 +2,15 @@ import { MCPServer, isBuilding } from "mcp-use";
 import { z } from "zod";
 import { auditSite } from "./src/audit.js";
 import { parseAllowedZones, snapshotCloudflareBaseline, zoneAllowed } from "./src/cloudflare.js";
-import { auditResultSchema, canvasPropsSchema, cloudflareBaselineSchema, indexNowResultSchema, type AuditResult, type CanvasProps, type IndexNowResult } from "./src/contract.js";
-import { auditToolResult, cloudflareToolResult, indexNowToolResult } from "./src/discovery-format.js";
-import { toToolResult } from "./src/format.js";
-import { SERVER_INFO, auditSiteDef, renderSubmissionCanvasDef, submitBraveUrlDef, submitIndexnowDef } from "./src/tool-defs.js";
-import { SubmissionGuard, bearerMatches, configFromEnv, dedupeKey, dedupeSetKey } from "./src/guard.js";
-import { submitIndexNow } from "./src/indexnow.js";
+import { auditResultSchema, canvasPropsSchema, cloudflareBaselineSchema, viesearchResultSchema, type AuditResult, type CanvasProps, type ViesearchResult } from "./src/contract.js";
+import { auditToolResult, cloudflareToolResult, viesearchToolResult } from "./src/discovery-format.js";
+import { MORE_PLACES_PATH, toToolResult } from "./src/format.js";
+import { SERVER_INFO, auditSiteDef, renderSubmissionCanvasDef, submitBraveUrlDef, submitViesearchUrlDef } from "./src/tool-defs.js";
+import { SubmissionGuard, bearerMatches, configFromEnv, dedupeKey } from "./src/guard.js";
 import { inputSchema, resultSchema, type SubmitResult } from "./src/schema.js";
 import { runBrowserSelfCheck } from "./src/selfcheck.js";
 import { submitToBrave } from "./src/submit.js";
+import { submitToViesearch } from "./src/viesearch.js";
 
 const server = new MCPServer({ ...SERVER_INFO, icons: SERVER_INFO.icons.map((i) => ({ ...i, sizes: [...i.sizes] })) });
 
@@ -69,48 +69,50 @@ export const submitBraveUrl = server.tool(
 
 // ---- Discovery suite -------------------------------------------------------------------------------------------
 // Per-process budgets, same in-memory style as the Brave guard (a restart or scale-out resets them).
-//   submit-indexnow: 1 at a time, 6 submissions/hour, identical (host + URL set) not resent for 1 h.
-//   audit-site:      3 at a time, 40/hour, no dedupe (it only reads).
-const indexNowGuard = new SubmissionGuard(
-  { maxConcurrent: 1, maxPerWindow: 6, windowMs: 60 * 60 * 1000, dedupeMs: 60 * 60 * 1000 },
+//   submit-viesearch-url: 1 at a time, 6 submissions/hour, identical URLs not resent for 24 h.
+//   audit-site: 3 at a time, 40/hour, no dedupe (it only reads).
+const viesearchGuard = new SubmissionGuard(
+  { maxConcurrent: 1, maxPerWindow: 6, windowMs: 60 * 60 * 1000, dedupeMs: 24 * 60 * 60 * 1000 },
   undefined,
-  { target: "IndexNow", running: "IndexNow submission", unit: "IndexNow submissions" },
+  { target: "Viesearch", running: "Viesearch submission", unit: "Viesearch submissions" },
+);
+
+export const submitViesearchUrl = server.tool(
+  submitViesearchUrlDef,
+  async ({ targetUrl, contactEmail }) => {
+    const gate = viesearchGuard.tryAcquire(dedupeKey(targetUrl));
+    if (!gate.ok) {
+      const denied: ViesearchResult = {
+        targetUrl,
+        status: "error",
+        errorCode: gate.code,
+        message: gate.message,
+        retryAfterSeconds: gate.retryAfterSeconds,
+        durationMs: 0,
+      };
+      // Never log the email: only the outcome code is recorded.
+      console.log(JSON.stringify({ event: "viesearch-denied", code: gate.code }));
+      return viesearchToolResult(denied);
+    }
+
+    let clicked = false;
+    try {
+      const outcome = await submitToViesearch(targetUrl, contactEmail);
+      clicked = outcome.clicked;
+      const { origin, pathname } = new URL(targetUrl);
+      console.log(
+        JSON.stringify({ event: "viesearch-finished", target: origin + pathname, status: outcome.result.status, errorCode: outcome.result.errorCode, durationMs: outcome.result.durationMs }),
+      );
+      return viesearchToolResult(outcome.result as ViesearchResult);
+    } finally {
+      gate.release({ clicked });
+    }
+  },
 );
 const auditGuard = new SubmissionGuard(
   { maxConcurrent: 3, maxPerWindow: 40, windowMs: 60 * 60 * 1000, dedupeMs: 60 * 60 * 1000 },
   undefined,
   { target: "the audit", running: "site audit", unit: "site audits" },
-);
-
-export const submitIndexnow = server.tool(
-  submitIndexnowDef,
-  async (input) => {
-    const keyLocation = input.keyLocation || `https://${input.host.toLowerCase()}/${input.key}.txt`;
-    const gate = indexNowGuard.tryAcquire(dedupeSetKey(input.host, input.urls));
-    if (!gate.ok) {
-      const denied: IndexNowResult = {
-        status: "error",
-        host: input.host.toLowerCase(),
-        urlCount: input.urls.length,
-        keyLocation,
-        keyVerified: false,
-        engines: [],
-        message: `${gate.message} Retry after about ${gate.retryAfterSeconds} seconds. Nothing was sent.`,
-        durationMs: 0,
-      };
-      console.log(JSON.stringify({ event: "indexnow-denied", code: gate.code }));
-      return indexNowToolResult(denied);
-    }
-    let pinged = false;
-    try {
-      const result = await submitIndexNow(input);
-      pinged = result.engines.length > 0;
-      console.log(JSON.stringify({ event: "indexnow-finished", host: result.host, status: result.status, urlCount: result.urlCount }));
-      return indexNowToolResult(result);
-    } finally {
-      gate.release({ clicked: pinged });
-    }
-  },
 );
 
 export const auditSiteTool = server.tool(
@@ -192,6 +194,7 @@ export const renderSubmissionCanvas = server.tool(
       ...(domain ? { domain } : {}),
       mode: mode ?? "interactive",
       enabledTools: { cloudflare: cloudflareConfigured, pageSpeed: Boolean(process.env.PAGESPEED_API_KEY?.trim()) },
+      morePlacesUrl: `${SERVER_INFO.websiteUrl}${MORE_PLACES_PATH}`,
     };
     return { content: [{ type: "text", text: "Canvas opened." }], structuredContent: props };
   },

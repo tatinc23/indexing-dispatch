@@ -6,6 +6,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderMorePlacesPage } from "./more-places.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const siteDir = join(root, "site");
@@ -77,23 +78,27 @@ for (const [from, to] of brandFiles) {
 writeFileSync(join(outDir, "robots.txt"), fill(`User-agent: *\nAllow: /\n\nSitemap: {{SITE_URL}}/sitemap.xml\n`));
 writeFileSync(
   join(outDir, "sitemap.xml"),
-  fill(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>{{SITE_URL}}/</loc></url>\n  <url><loc>{{SITE_URL}}/privacy</loc></url>\n  <url><loc>{{SITE_URL}}/terms</loc></url>\n</urlset>\n`),
+  fill(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>{{SITE_URL}}/</loc></url>\n  <url><loc>{{SITE_URL}}/more-places</loc></url>\n  <url><loc>{{SITE_URL}}/privacy</loc></url>\n  <url><loc>{{SITE_URL}}/terms</loc></url>\n</urlset>\n`),
 );
+
+// /more-places: a static list of directories no agent can submit to, from src/more-places.json.
+writeFileSync(join(outDir, "more-places.html"), fill(renderMorePlacesPage(JSON.parse(readFileSync(join(root, "src", "more-places.json"), "utf8")), SITE_URL)));
 writeFileSync(
   join(outDir, "llms.txt"),
   fill(`# Indexing Dispatch
 
-> A free tool for your website. Paste your link, copy a ready-made prompt, drop it into your AI app. It sends a page to Brave Search, checks how ready your site is for AI and search, and pings IndexNow (Bing, Yandex, Naver and other engines), then tells you what each one actually said. A Brave result of "accepted" means Brave confirmed it received the URL, not that the page is indexed.
+> A free tool for your website. Paste your link, copy a ready-made prompt, drop it into your AI app. It sends a page to Brave Search and Viesearch, checks how ready your site is for AI and search, then tells you what each one actually said. A Brave result of "accepted" means Brave confirmed it received the URL, not that the page is indexed. A Viesearch result of "accepted" means Viesearch confirmed it received the URL, not that the site is listed.
 
-Indexing Dispatch is an MCP server run by TAT Inc. Its address is {{MCP_URL}} (streamable HTTP, no sign-in). You add it once as a custom server in Claude, Codex, Cursor or ChatGPT (Business, Enterprise and Edu, on the web). It is not affiliated with Brave.
+Indexing Dispatch is an MCP server run by TAT Inc. Its address is {{MCP_URL}} (streamable HTTP, no sign-in). You add it once as a custom server in Claude, Codex, Cursor or ChatGPT (Business, Enterprise and Edu, on the web). It is not affiliated with Brave or Viesearch.
 
 ## Page
 
-- [Try it](https://{{SITE_URL_HOST}}/#try): paste your link and copy a ready-made prompt (check the site then send it to Brave, just send to Brave, or set up IndexNow).
-- [What is IndexNow?](https://{{SITE_URL_HOST}}/#indexnow): a plain-English explainer. A ping asks engines to look at new or changed pages; it does not guarantee indexing.
+- [Try it](https://{{SITE_URL_HOST}}/#try): paste your link and copy a ready-made prompt (check the site then send it to Brave and Viesearch, just send to Brave, or just send to Viesearch).
+- [What is Viesearch?](https://{{SITE_URL_HOST}}/#viesearch): a plain-English explainer. Viesearch is a human-reviewed directory; the tool fills its form with your URL and email and stops instead of solving any human check.
 - [Plug it in once](https://{{SITE_URL_HOST}}/#connect): step 1, setup steps for Claude, Codex, Cursor and ChatGPT.
-- [The four tools](https://{{SITE_URL_HOST}}/#tools): submit-brave-url, audit-site, submit-indexnow, render-submission-canvas.
-- [What you'll get back](https://{{SITE_URL_HOST}}/#expect): the Brave statuses (accepted, verification_required, rejected, timeout, error) and what each means.
+- [The four tools](https://{{SITE_URL_HOST}}/#tools): submit-brave-url, audit-site, submit-viesearch-url, render-submission-canvas.
+- [What you'll get back](https://{{SITE_URL_HOST}}/#expect): the Brave and Viesearch statuses (accepted, verification_required, rejected, timeout, error) and what each means.
+- [More places to submit yourself](https://{{SITE_URL_HOST}}/more-places): directories no agent can submit to, with each one's own submit link.
 - [Privacy](https://{{SITE_URL_HOST}}/privacy): what the server logs. The page has no cookies and no analytics.
 - [Terms](https://{{SITE_URL_HOST}}/terms): only submit pages you own or have permission to submit.
 

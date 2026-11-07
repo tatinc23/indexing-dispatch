@@ -20,7 +20,7 @@ Writes `docs/experiment/snapshot-<label>.json` (no token, no zone id). It record
 Use the live server, not a mock, and save every exact reply in `docs/experiment/run-log-2026-MM-DD.md`.
 1. `audit-site` on `https://dispatch.tatinc.us/` and `https://tatinc.us/` (read-only).
 2. `submit-brave-url` for `https://dispatch.tatinc.us/`, `https://tatinc.us/`, `https://chatterbox.tatinc.us/`. Brave limits: 12 an hour, same URL not resent within 24 h.
-3. `submit-indexnow` for `dispatch.tatinc.us` only (the only host with a key file). The Worker's egress got HTTP 429 twice, so send it from the Mac: `node --import tsx scripts/live-indexnow.ts dispatch.tatinc.us 604b2c528ea2d2f6bafd419739fdaec5 https://dispatch.tatinc.us/` (the key is public by design; it is the key file at the site root). the maintainer confirms the URL list before the run.
+3. `submit-indexnow` for `dispatch.tatinc.us` only (the only host with a key file). The Worker's egress got HTTP 429 twice, so send it from the Mac: `node --import tsx scripts/live-indexnow.ts dispatch.tatinc.us <id> https://dispatch.tatinc.us/` (the key is public by design; it is the key file at the site root). the maintainer confirms the URL list before the run.
 4. Control: `shabba.tatinc.us` is NOT submitted. It shows what happens to a similar TAT page with no ping.
 
 ## Read the result honestly

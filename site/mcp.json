@@ -1,7 +1,7 @@
 {
   "name": "indexing-dispatch",
   "title": "Indexing Dispatch",
-  "description": "Send a page to Brave Search, check how ready your site is for AI and search, and ping IndexNow. Each tool reports what it actually saw. Free, no sign-in. Not affiliated with Brave.",
+  "description": "Send a page to Brave Search and Viesearch, check how ready your site is for AI and search. Each tool reports what it actually saw. Free, no sign-in. Not affiliated with Brave or Viesearch.",
   "version": "1.0.0",
   "websiteUrl": "{{SITE_URL}}",
   "url": "{{MCP_URL}}",
@@ -9,7 +9,7 @@
   "authentication": "none",
   "remotes": [{ "type": "streamable-http", "url": "{{MCP_URL}}" }],
   "mcpServers": { "indexing-dispatch": { "url": "{{MCP_URL}}" } },
-  "tools": ["submit-brave-url", "audit-site", "submit-indexnow", "render-submission-canvas"],
+  "tools": ["submit-brave-url", "audit-site", "submit-viesearch-url", "render-submission-canvas"],
   "publisher": { "name": "TAT Inc", "url": "https://tatinc.us/" },
   "support": "mailto:emailme@tatinc.us"
 }

@@ -6,7 +6,7 @@
 //   - a DAILY browser-time budget, so Cloudflare's free Browser Run minutes are never silently exhausted.
 // The Node/Docker server keeps using the in-process SubmissionGuard (per process, not global).
 
-export type BudgetKind = "brave" | "indexnow" | "audit";
+export type BudgetKind = "brave" | "viesearch" | "audit";
 
 export interface KindConfig {
   maxConcurrent: number;
@@ -39,7 +39,7 @@ const HOUR = 60 * 60 * 1000;
 export const DEFAULT_LEDGER_CONFIG: LedgerConfig = {
   kinds: {
     brave: { maxConcurrent: 1, maxPerWindow: 12, windowMs: HOUR, dedupeMs: 24 * HOUR, minSpacingMs: 20_000, leaseMs: 150_000, usesBrowser: true, labels: { target: "Brave", running: "browser submission", unit: "submissions" } },
-    indexnow: { maxConcurrent: 1, maxPerWindow: 6, windowMs: HOUR, dedupeMs: HOUR, minSpacingMs: 0, leaseMs: 60_000, usesBrowser: false, labels: { target: "IndexNow", running: "IndexNow submission", unit: "IndexNow submissions" } },
+    viesearch: { maxConcurrent: 1, maxPerWindow: 6, windowMs: HOUR, dedupeMs: 24 * HOUR, minSpacingMs: 25_000, leaseMs: 150_000, usesBrowser: true, labels: { target: "Viesearch", running: "Viesearch submission", unit: "Viesearch submissions" } },
     audit: { maxConcurrent: 3, maxPerWindow: 40, windowMs: HOUR, dedupeMs: 0, minSpacingMs: 0, leaseMs: 90_000, usesBrowser: false, labels: { target: "the audit", running: "site audit", unit: "site audits" } },
   },
   dailyBrowserMs: 8 * 60_000,
@@ -71,7 +71,7 @@ export interface LedgerState {
 }
 
 const emptyKind = (): KindState => ({ starts: [], sent: [], leases: [] });
-export const emptyLedgerState = (now: number): LedgerState => ({ day: utcDay(now), browserMsUsed: 0, kinds: { brave: emptyKind(), indexnow: emptyKind(), audit: emptyKind() }, seq: 0 });
+export const emptyLedgerState = (now: number): LedgerState => ({ day: utcDay(now), browserMsUsed: 0, kinds: { brave: emptyKind(), viesearch: emptyKind(), audit: emptyKind() }, seq: 0 });
 
 export function utcDay(t: number): string {
   return new Date(t).toISOString().slice(0, 10);
@@ -162,7 +162,7 @@ export class BudgetLedger {
     return { ok: true, leaseId };
   }
 
-  /** `sent`: the request reached the third party (Brave click / IndexNow POST). `browserMs`: measured browser time, if any. */
+  /** `sent`: the request reached the third party (a submitted browser form). `browserMs`: measured browser time, if any. */
   release(kind: BudgetKind, leaseId: string, outcome: { sent: boolean; browserMs?: number }): void {
     const t = this.now();
     const cfg = this.config.kinds[kind];
