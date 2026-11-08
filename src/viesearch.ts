@@ -1,4 +1,5 @@
 import type { Browser } from "puppeteer";
+import { VIESEARCH_CONFIRM_LINE } from "./contract.js";
 import { FIND_EMAIL_INPUT, READ_VIESEARCH_SNAPSHOT } from "./page-scripts.js";
 import { DEFAULT_TIMINGS, runBraveSubmission, type BrowserLike, type CoreSubmitOptions, type SubmitOutcome } from "./submit-core.js";
 import { defaultLaunch } from "./submit.js";
@@ -32,7 +33,7 @@ export function submitToViesearch(targetUrl: string, contactEmail: string, optio
       label: "Viesearch",
       manualUrl: VIESEARCH_SUBMIT_URL,
       submitPageUrl: VIESEARCH_SUBMIT_URL,
-      receivedNote: "Acceptance means the URL was received; it is not a guarantee that Viesearch will list it.",
+      receivedNote: `Acceptance means the URL was received; it is not a guarantee that Viesearch will list it. ${VIESEARCH_CONFIRM_LINE}`,
       classifyOptions: { siteLabel: "Viesearch", rejectedPatterns: [REGISTERED_USER] },
       snapshotScript: READ_VIESEARCH_SNAPSHOT,
     },

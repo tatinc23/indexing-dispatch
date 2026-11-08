@@ -159,10 +159,15 @@ export const READ_SNAPSHOT = `(() => {
 
 /**
  * Viesearch twin of READ_SNAPSHOT. Identical except the confirmation wording below, which is
- * PROVISIONAL: the submit form was read live on 2026-11-07 but no real submission has been
- * observed yet, so the success text is a guess. Accepting still needs corroboration (a Success
- * heading or a submitted-state button) exactly like the Brave flow, and the first real
- * submission (done by hand) must replace this guess with the observed page. See classify.ts
+ * PROVISIONAL: the submit form was read live on 2026-11-07 but no on-page confirmation has been
+ * observed yet. the maintainer's first real run (2026-11-08, by hand) reported "no clear answer" from the
+ * tool, then Viesearch emailed "Confirm your Viesearch submission" ("Thank you for submitting
+ * Indexing Dispatch | TAT Inc to our search engine! To finalize your submission and enter the
+ * standard review queue, please click the button below to confirm your email address." with a
+ * "Confirm Submission" button). So "accepted" still needs an explicit on-page confirmation with
+ * corroboration (a Success heading or a submitted-state button) exactly like the Brave flow;
+ * anything less stays pending/timeout. When a real confirmation page is observed, replace the
+ * guess below plus the fixture in test/viesearch-submit.fixture.test.ts. See classify.ts
  * and docs/directories-2026-11-07.md ("Viesearch" row).
  */
 export const READ_VIESEARCH_SNAPSHOT = `(() => {

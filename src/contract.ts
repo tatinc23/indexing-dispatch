@@ -2,6 +2,18 @@
 // Every field must come from something actually observed. No simulated or default-filled values.
 import { z } from "zod";
 
+/**
+ * Viesearch email-confirmation reminder (2026-11-08, the maintainer's first real run): the tool reported
+ * "no clear answer", then Viesearch emailed "Confirm your Viesearch submission" with a
+ * "Confirm Submission" button ("Your site enters their review queue only after that").
+ * Until Viesearch's post-submit page wording is observed, "accepted" still needs an explicit
+ * on-page confirmation, and EVERY Viesearch result carries this reminder (text, structured
+ * message and panel row). Single source: backend (discovery-format), widget (canvas lib)
+ * and prompts all use this exact sentence.
+ */
+export const VIESEARCH_CONFIRM_LINE =
+  "Check your inbox for an email from Viesearch and click Confirm Submission. Your site enters their review queue only after that.";
+
 export const severity = z.enum(["info", "warn", "missing"]);
 
 export const finding = z.object({

@@ -2,11 +2,13 @@
  * Drives the REAL Viesearch submit flow in real Chromium against local fixture pages that imitate
  * Viesearch's submit form. Form structure mirrors what was observed live on 2026-11-07
  * (Website URL input + optional Title/Description/Category + Email Address input + "Submit" button).
- * The confirmation UI is PROVISIONAL: no real submission has been observed yet, so the
- * accepted-state fixture shows generic success wording that the provisional confirmation patterns
- * in READ_VIESEARCH_SNAPSHOT are built to recognise. The first real submission (done by hand)
- * must replace the fixture and the patterns with the observed page.
- * Nothing here contacts Viesearch.
+ * The confirmation UI is PROVISIONAL: no on-page confirmation has been observed yet (the maintainer's first
+ * real run, 2026-11-08 by hand, reported "no clear answer" from the tool, then Viesearch emailed
+ * a "Confirm Submission" step), so the accepted-state fixture shows generic success wording that
+ * the provisional confirmation patterns in READ_VIESEARCH_SNAPSHOT are built to recognise.
+ * "accepted" still needs that explicit confirmation; every result must also carry the
+ * email-confirmation reminder. When a real confirmation page is observed, replace the fixture
+ * and the patterns with it. Nothing here contacts Viesearch.
  */
 import assert from "node:assert/strict";
 import { createServer, type Server } from "node:http";
@@ -91,6 +93,23 @@ describe("submitToViesearch against fixtures (real Chromium)", () => {
     assert.equal(clicked, true);
     assert.match(result.message, /Viesearch's page showed an explicit success confirmation/);
     assert.match(result.message, /not a guarantee that Viesearch will list it/);
+  });
+
+  it("accepted message reminds the user to confirm the Viesearch email", async () => {
+    const { result } = await run("/?scenario=accepted");
+    assert.equal(result.status, "accepted");
+    assert.match(result.message, /Confirm Submission/);
+    assert.match(result.message, /review queue/);
+  });
+
+  it("non-accepted outcomes still carry the email-confirmation reminder via the tool result", async () => {
+    const { viesearchToolResult } = await import("../src/discovery-format.js");
+    for (const path of ["/?scenario=registered", "/?scenario=verification"]) {
+      const { result } = await run(path);
+      const out = viesearchToolResult(result as unknown as import("../src/contract.js").ViesearchResult);
+      assert.match(out.content[0]!.text, /Confirm Submission/);
+      assert.match((out.structuredContent as { message: string }).message, /review queue/);
+    }
   });
 
   it("accepted confirmation is the page's text, and the email is redacted everywhere", async () => {

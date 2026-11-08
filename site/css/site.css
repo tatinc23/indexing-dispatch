@@ -74,6 +74,7 @@ main{max-width:76rem;margin:0 auto;padding:clamp(10px,1.6vw,20px) var(--gutter) 
 h1{font-family:var(--display);font-weight:900;text-transform:uppercase;font-size:clamp(2.5rem,5.7vw,4.7rem);line-height:.9;letter-spacing:.004em;color:var(--ink);margin-top:clamp(10px,1.8vw,22px);max-width:calc(100% - clamp(60px,9vw,130px))}
 .sub{font-size:clamp(1.05rem,1.7vw,1.25rem);line-height:1.4;color:var(--ink-2);margin-top:10px;max-width:40rem}
 .hook{display:block;font-weight:700;color:var(--ink);margin-bottom:2px}
+.jam-mark{height:1.35em;width:auto;vertical-align:-0.28em}
 
 /* the steps: postmark numbers, perforations between */
 .route{list-style:none;margin-top:clamp(14px,2vw,22px);max-width:46rem}
@@ -167,8 +168,8 @@ details[open] > summary > .chev{transform:rotate(90deg)}
 .prompt{display:block;background:var(--card);padding:10px 16px 18px;font-family:var(--body);font-size:1rem;line-height:1.6;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;user-select:text}
 .prompt:focus-visible{outline-offset:-4px}
 .prompt[hidden]{display:none}
-.slot{color:var(--blue-deep);font-weight:700;background:var(--blue-wash);border-bottom:2px solid var(--blue);padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-.slot.filled{background:transparent}
+.slot,.eslot{color:var(--blue-deep);font-weight:700;background:var(--blue-wash);border-bottom:2px solid var(--blue);padding:0 4px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.slot.filled,.eslot.filled{background:transparent}
 
 /* step 3 */
 .honest{color:var(--ink-2)}
@@ -321,6 +322,31 @@ details[open] > summary > .chev{transform:rotate(90deg)}
 .doc p{margin-top:12px}
 .doc .dots{max-width:44rem}
 .doc .back{display:inline-flex;align-items:center;min-height:44px;margin-top:24px;font-weight:700}
+
+/* more-places rows: name link, tag pill, note on its own line below */
+.doc .tag{display:inline-block;margin-left:10px;padding:1px 10px;border:2px solid var(--line);border-radius:999px;color:var(--muted);font-size:.85rem;font-weight:700;white-space:nowrap}
+.doc .mp-note{display:block;color:var(--muted);font-size:.95rem;margin-top:2px}
+
+/* more-places one-screen desktop: compact grid, notes behind an "i" toggle */
+.mp-why{display:inline;margin-left:8px}
+.mp-why > summary{list-style:none;cursor:pointer;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);color:var(--muted);font-size:.72rem;font-weight:700;line-height:1;vertical-align:1px}
+.mp-why > summary::-webkit-details-marker{display:none}
+.mp-why > summary:hover{border-color:var(--blue-deep);color:var(--blue-deep)}
+.mp-why > summary:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.mp-why[open] > summary{background:var(--muted);color:#fff}
+.mp-why[open] > summary:hover{background:var(--blue-deep);border-color:var(--blue-deep)}
+@media (min-width:1100px){
+  .mp h1{font-size:clamp(1.7rem,2.6vw,2.4rem);margin-top:8px}
+  .mp .big{font-size:1rem}
+  .mp-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 clamp(20px,2.4vw,40px);align-items:start;margin-top:14px}
+  .mp-group h2{font-size:1.05rem;margin-bottom:6px}
+  .mp-group .dots li{padding:2px 0 2px 20px;font-size:.85rem}
+  .mp-group .dots li + li{margin-top:0}
+  .mp-group .dots li::before{top:.5em}
+  .mp .tag{margin-left:8px;font-size:.75rem}
+  .mp-why > summary{width:20px;height:20px;font-size:.68rem}
+  .mp .back{margin-top:16px}
+}
 
 /* laptops and up: the envelope layout (headline left, steps as the address block right). After the base rules so it wins. */
 @media (min-width:1000px){

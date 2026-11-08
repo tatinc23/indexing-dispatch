@@ -87,7 +87,7 @@ writeFileSync(
   join(outDir, "llms.txt"),
   fill(`# Indexing Dispatch
 
-> A free tool for your website. Paste your link, copy a ready-made prompt, drop it into your AI app. It sends a page to Brave Search and Viesearch, checks how ready your site is for AI and search, then tells you what each one actually said. A Brave result of "accepted" means Brave confirmed it received the URL, not that the page is indexed. A Viesearch result of "accepted" means Viesearch confirmed it received the URL, not that the site is listed.
+> A free tool for your website. Paste your link, copy a ready-made prompt, drop it into your AI app. It sends a page to Brave Search and Viesearch, checks how ready your site is for AI and search, and gives you their receipt: received, not indexed. A Brave result of "accepted" means Brave confirmed it received the URL, not that the page is indexed. A Viesearch result of "accepted" means Viesearch confirmed it received the URL, not that the site is listed: check your inbox for their Confirm Submission email, since your site enters their review queue only after you click it.
 
 Indexing Dispatch is an MCP server run by TAT Inc. Its address is {{MCP_URL}} (streamable HTTP, no sign-in). You add it once as a custom server in Claude, Codex, Cursor or ChatGPT (Business, Enterprise and Edu, on the web). It is not affiliated with Brave or Viesearch.
 

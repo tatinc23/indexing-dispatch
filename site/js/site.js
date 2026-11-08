@@ -83,19 +83,25 @@
     });
   });
 
-  // ---- step 2: the prompt form ----
+  // ---- steps 2+3: the link, the Viesearch email, and the prompt form ----
   var slots = document.querySelectorAll(".slot");
+  var eslots = document.querySelectorAll(".eslot");
   var form = $("go");
   var input = $("page-url");
   var hint = $("url-hint");
+  var emailInput = $("contact-email");
+  var emailHint = $("email-hint");
   var next = $("next");
   var peek = $("peek");
   var cap = $("prompt-cap");
   var prompts = document.querySelectorAll(".prompt[data-variant]");
   var PLACEHOLDER = slots.length ? slots[0].textContent : "";
+  var EPLACEHOLDER = eslots.length ? eslots[0].textContent : "";
   var HINT = hint ? hint.textContent : "";
+  var EHINT = emailHint ? emailHint.textContent : "";
   var NEXT = next ? next.innerHTML : "";
   var BAD = "That doesn't look like a web address yet, e.g. yourbusiness.com";
+  var EBAD = "That email doesn't look complete. Check it, or leave it empty and use Just send to Brave.";
 
   function normalise(v) {
     v = v.trim();
@@ -118,6 +124,25 @@
     hint.classList.toggle("bad", bad);
     if (bad) input.setAttribute("aria-invalid", "true");
     else input.removeAttribute("aria-invalid");
+  }
+  function emailOk(v) {
+    v = v.trim();
+    if (!v) return true; // optional: empty means the Brave-only prompt still works
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+  }
+  function setEslots(text, filled) {
+    each(eslots, function (s) {
+      s.textContent = text;
+      s.classList.toggle("filled", filled);
+    });
+  }
+  function setEmailHint(msg, bad) {
+    if (!emailHint) return;
+    emailHint.textContent = msg;
+    emailHint.classList.toggle("bad", bad);
+    if (!emailInput) return;
+    if (bad) emailInput.setAttribute("aria-invalid", "true");
+    else emailInput.removeAttribute("aria-invalid");
   }
   function currentPrompt() {
     var picked = form ? form.querySelector('input[name="what"]:checked') : null;
@@ -146,10 +171,26 @@
     input.addEventListener("input", function () {
       var v = normalise(input.value);
       resetNext();
-      if (now !== 2) setNow(2);
-      if (v) { setSlots(v, true); setHint(HINT, false); }
-      else { setSlots(PLACEHOLDER, false); setHint(v === null ? BAD : HINT, v === null); }
+      if (v) {
+        setSlots(v, true); setHint(HINT, false);
+        markDone(2);
+        if (now !== 3) setNow(3);
+      } else {
+        setSlots(PLACEHOLDER, false); setHint(v === null ? BAD : HINT, v === null);
+        if (now !== 2) setNow(2);
+      }
     });
+    if (emailInput) {
+      emailInput.addEventListener("focus", function () { if (now === 2) setNow(3); });
+      emailInput.addEventListener("input", function () {
+        var raw = emailInput.value.trim();
+        resetNext();
+        if (now !== 3) setNow(3);
+        if (!raw) { setEslots(EPLACEHOLDER, false); setEmailHint(EHINT, false); }
+        else if (emailOk(raw)) { setEslots(raw, true); setEmailHint(EHINT, false); }
+        else { setEslots(EPLACEHOLDER, false); setEmailHint(EBAD, true); }
+      });
+    }
     each(form.querySelectorAll('input[name="what"]'), function (r) { r.addEventListener("change", showVariant); });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -161,13 +202,25 @@
       }
       setSlots(v, true);
       var target = currentPrompt();
+      var want = target.getAttribute("data-variant");
+      // The email is optional: empty still copies, and the Brave-only prompt never mentions it.
+      if (emailInput && want !== "brave") {
+        var raw = emailInput.value.trim();
+        if (raw && !emailOk(raw)) {
+          setEmailHint(EBAD, true);
+          emailInput.focus();
+          return;
+        }
+        setEslots(raw || EPLACEHOLDER, !!raw);
+        setEmailHint(raw ? EHINT : EHINT, false);
+      }
       copyEl(target).then(function (ok) {
         if (ok) {
           say("Prompt copied");
           next.innerHTML = "Copied. Now paste it in your AI and send it. Not set up yet? <a href=\"#connect\">Do step 1 first</a>.";
           next.classList.add("ok");
           markDone(2);
-          setNow(3);
+          markDone(3);
         } else {
           if (peek) peek.setAttribute("open", "");
           selectNode(target);
@@ -241,7 +294,7 @@
   var el = {
     s1type: q(".s1 .type"), add: q('.s1 [data-hit="1"]'), conn: q(".s1 .conn"), sw: q(".s1 .sw"),
     s2type: q(".s2 .type"), copy: q('.s2 [data-hit="2"]'), mslot: q(".s2 .mslot"),
-    s3type: q(".s3 .composer .type"), send: q('.s3 [data-hit="3"]'), me: q(".s3 .bub.me"), t1: q(".s3 .t1"), t2: q(".s3 .t2"), ai: q(".s3 .bub.ai")
+    s3type: q(".s3 .composer .type"), send: q('.s3 [data-hit="3"]'), me: q(".s3 .bub.me"), t1: q(".s3 .t1"), t2: q(".s3 .t2"), t3: q(".s3 .t3"), ai: q(".s3 .bub.ai")
   };
 
   function typeInto(node, lt) {
@@ -281,7 +334,9 @@
     el.t1.classList.toggle("done", lt >= 3400);
     el.t2.classList.toggle("hide", lt < 3700);
     el.t2.classList.toggle("done", lt >= 5800);
-    el.ai.classList.toggle("hide", lt < 6200);
+    el.t3.classList.toggle("hide", lt < 6100);
+    el.t3.classList.toggle("done", lt >= 8000);
+    el.ai.classList.toggle("hide", lt < 8400);
     return el.send;
   }
   var SCENES = [scene1, scene2, scene3];

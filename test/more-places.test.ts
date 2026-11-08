@@ -17,6 +17,13 @@ test("more-places data: every row has a name, an https submit URL, a tag and a c
   }
 });
 
+test("more-places page uses the letter-card shell (content never sits on the stripes)", () => {
+  const html = renderMorePlacesPage(data, "https://dispatch.tatinc.us");
+  assert.ok(html.includes('class="env-in"'), "env-in letter card");
+  assert.ok(html.includes('class="envelope doc'), "envelope doc shell");
+  assert.ok(html.includes('class="skip"'), "skip link");
+});
+
 test("more-places page lists exactly the data file's sites, every link https with nofollow", () => {
   const html = renderMorePlacesPage(data, "https://dispatch.tatinc.us");
   for (const s of rows()) {

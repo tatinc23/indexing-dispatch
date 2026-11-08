@@ -1334,3 +1334,13 @@ code {
     margin: 0;
   }
 }
+
+/* Viesearch email, directly under the URL box so it can't be missed (2026-11-08). */
+.email-field {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+}
+.email-field .hint {
+  margin: 0;
+}

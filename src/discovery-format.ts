@@ -1,5 +1,5 @@
 // Text + structuredContent builders for the discovery tools (clients that only read `content` still get the facts).
-import type { AuditResult, CloudflareBaseline, ViesearchResult } from "./contract.js";
+import { VIESEARCH_CONFIRM_LINE, type AuditResult, type CloudflareBaseline, type ViesearchResult } from "./contract.js";
 import { MORE_PLACES_PATH } from "./format.js";
 import { SERVER_INFO } from "./tool-defs.js";
 
@@ -27,13 +27,18 @@ export function auditToolResult(r: AuditResult) {
 }
 
 export function viesearchToolResult(r: ViesearchResult) {
-  const head = `${r.status.toUpperCase()}${r.errorCode ? ` (${r.errorCode})` : ""} — ${r.targetUrl}`;
-  const lines = [head, r.message];
-  if (r.confirmationText) lines.push(`Viesearch said: "${r.confirmationText}"`);
-  if (r.retryAfterSeconds) lines.push(`Do not retry before ${r.retryAfterSeconds}s.`);
+  // Every Viesearch result carries the email-confirmation reminder in BOTH the text and the
+  // structured message (2026-11-08: Viesearch emails a "Confirm Submission" step after the form).
+  const out: ViesearchResult = r.message.includes(VIESEARCH_CONFIRM_LINE)
+    ? r
+    : { ...r, message: `${r.message} ${VIESEARCH_CONFIRM_LINE}` };
+  const head = `${out.status.toUpperCase()}${out.errorCode ? ` (${out.errorCode})` : ""} — ${out.targetUrl}`;
+  const lines = [head, out.message];
+  if (out.confirmationText) lines.push(`Viesearch said: "${out.confirmationText}"`);
+  if (out.retryAfterSeconds) lines.push(`Do not retry before ${out.retryAfterSeconds}s.`);
   lines.push(`More places to submit yourself: ${SERVER_INFO.websiteUrl}${MORE_PLACES_PATH}`);
-  lines.push(`(${(r.durationMs / 1000).toFixed(1)}s)`);
-  return build(r, lines, r.status !== "accepted");
+  lines.push(`(${(out.durationMs / 1000).toFixed(1)}s)`);
+  return build(out, lines, out.status !== "accepted");
 }
 
 export function cloudflareToolResult(r: CloudflareBaseline) {

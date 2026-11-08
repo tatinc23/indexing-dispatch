@@ -40,7 +40,7 @@
       "title": "AI & dev directories",
       "sites": [
         { "name": "FutureTools", "submitUrl": "https://futuretools.io/submit-a-tool", "tag": "free", "verifiedOn": "2026-11-07" },
-        { "name": "topai.tools", "submitUrl": "https://topaitools.net/submit", "tag": "free", "note": "Not topai.tools, which is paid-only.", "verifiedOn": "2026-11-07" },
+        { "name": "topaitools.net", "submitUrl": "https://topaitools.net/submit", "tag": "free", "note": "Not topai.tools, which is paid-only.", "verifiedOn": "2026-11-07" },
         { "name": "dang.ai", "submitUrl": "https://dang.ai/pricing", "tag": "free, account", "verifiedOn": "2026-11-07" },
         { "name": "ToolPilot", "submitUrl": "https://www.toolpilot.ai/pages/submit-your-ai-tool", "tag": "free, needs backlink", "note": "Free listings need a badge linking back to ToolPilot.", "verifiedOn": "2026-11-07" },
         { "name": "PeerPush", "submitUrl": "https://peerpush.com/submit", "tag": "free, account", "verifiedOn": "2026-11-07" },

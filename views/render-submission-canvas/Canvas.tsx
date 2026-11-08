@@ -3,7 +3,7 @@
 // Every number, status and sentence on screen comes from a tool result (src/contract.ts, SubmitResult) or from what the
 // user typed. Nothing is seeded or defaulted.
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import type { AuditResult, CanvasProps, CloudflareBaseline } from "../../src/contract.js";
+import { VIESEARCH_CONFIRM_LINE, type AuditResult, type CanvasProps, type CloudflareBaseline } from "../../src/contract.js";
 import type { SubmitResult } from "../../src/schema.js";
 import {
   BRAVE_STATUS_LABEL,
@@ -493,7 +493,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
             <Logo />
             <span>Indexing Dispatch</span>
           </h1>
-          <p className="tagline">Send pages to Brave and Viesearch, audit AI readiness, snapshot Cloudflare traffic.</p>
+          <p className="tagline">{cfOn ? "Send pages to Brave and Viesearch, audit AI readiness, snapshot Cloudflare traffic." : "Send pages to Brave and Viesearch, and audit AI readiness."}</p>
           <div className="head-top">
             <button type="button" className="ghost" onClick={reset} disabled={running}>
               <Icon name="reset" />
@@ -509,7 +509,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
               Send with
             </h2>
             <ul className="units">
-              {UNITS.map((u) => {
+              {UNITS.filter((u) => u.id !== "cloudflare" || cfOn).map((u) => {
                 const st = unitStatus({ enabled: enabled[u.id], included: included[u.id], blocked: blocked[u.id], phase: phases[u.id], progress: progress[u.id] });
                 const isCf = u.id === "cloudflare";
                 return (
@@ -570,6 +570,31 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
                     disabled={running}
                     aria-describedby="urls-hint urls-notes"
                   />
+                  <p className="hint">One URL per line.</p>
+                  {included.viesearch && (
+                    <div className="email-field">
+                      <label htmlFor="vsemail" className="field-label">
+                        Your email for Viesearch
+                      </label>
+                      <input
+                        id="vsemail"
+                        className="input"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={running}
+                        spellCheck={false}
+                        autoCapitalize="off"
+                        autoComplete="email"
+                        placeholder="you@example.com"
+                        aria-describedby="vsemail-hint"
+                        aria-invalid={email.trim() !== "" && emailProblem(email.trim()) !== null}
+                      />
+                      <p id="vsemail-hint" className="hint">
+                        Viesearch's form requires it. It goes only to Viesearch; the server never stores it or shows it back.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="buffer-go">
                   <button type="button" className="go" onClick={() => void run()} disabled={running || blockers.length > 0} aria-describedby="run-hint">
@@ -781,30 +806,9 @@ function ViesearchPanel(p: { rows: BraveRow[]; included: boolean; email: string;
   const t = braveTotals(done);
   return (
     <>
-      <Note>One URL at a time using your email address below. Viesearch's form asks for the site's name, URL, description and your email; the panel fills the URL and email and leaves the rest blank. "Accepted" means Viesearch's form confirmed it received the URL, not that the site is listed.</Note>
+      <Note>One URL at a time, using the email address you entered under the URL box. Viesearch's form asks for the site's name, URL, description and your email; the panel fills the URL and email and leaves the rest blank. "Accepted" means Viesearch's form confirmed it received the URL, not that the site is listed. {VIESEARCH_CONFIRM_LINE}</Note>
       <NotIncluded included={p.included} />
-      <div className="opts">
-        <label htmlFor="vsemail" className="field-label">
-          Your email address for Viesearch
-        </label>
-        <input
-          id="vsemail"
-          className="input"
-          type="email"
-          value={p.email}
-          onChange={(e) => p.setEmail(e.target.value)}
-          disabled={p.disabled}
-          spellCheck={false}
-          autoCapitalize="off"
-          autoComplete="email"
-          aria-describedby="vsemail-hint"
-          aria-invalid={p.email.trim() !== "" && emailProblem(p.email.trim()) !== null}
-        />
-        <p id="vsemail-hint" className="hint">
-          Goes only to Viesearch with the submission. The server never stores it or echoes it back.
-        </p>
-        {p.problem && p.included && <p className="hint bad">{p.problem}</p>}
-      </div>
+      {p.problem && p.included && <p className="hint bad">{p.problem}</p>}
       {p.rows.length === 0 ? (
         p.included && <p className="empty">No run yet. Initiate a run to submit the URLs above.</p>
       ) : (

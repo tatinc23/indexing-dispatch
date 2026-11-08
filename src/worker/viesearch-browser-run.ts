@@ -2,6 +2,7 @@
 // Same shape as src/worker/brave-browser-run.ts: the visitor's contact email is filled into Viesearch's
 // Email Address field, redacted from every page-derived string, screenshots skipped, never logged.
 import puppeteer from "@cloudflare/puppeteer";
+import { VIESEARCH_CONFIRM_LINE } from "../contract.js";
 import type { SubmitResult } from "../schema.js";
 import { FIND_EMAIL_INPUT, READ_VIESEARCH_SNAPSHOT } from "../page-scripts.js";
 import { DEFAULT_TIMINGS, runBraveSubmission, type BrowserLike, type SubmitOutcome, type Timings } from "../submit-core.js";
@@ -65,7 +66,7 @@ export async function submitViaViesearchRun(
       label: "Viesearch",
       manualUrl: VIESEARCH_SUBMIT_URL,
       submitPageUrl: VIESEARCH_SUBMIT_URL,
-      receivedNote: "Acceptance means the URL was received; it is not a guarantee that Viesearch will list it.",
+      receivedNote: `Acceptance means the URL was received; it is not a guarantee that Viesearch will list it. ${VIESEARCH_CONFIRM_LINE}`,
       classifyOptions: { siteLabel: "Viesearch", rejectedPatterns: [/already a registered user/i] },
       snapshotScript: READ_VIESEARCH_SNAPSHOT,
     },

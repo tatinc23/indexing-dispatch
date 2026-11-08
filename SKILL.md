@@ -21,7 +21,7 @@ Tools (all on the `indexing-dispatch` MCP server):
 1. Ask for the site URL(s) if not given (public http(s) only).
 2. Run `audit-site` on the main URL (read-only). Summarise `findings`, `suggestedFiles`, and the PageSpeed state (it is included only if the operator configured a key; `skipped` is normal).
 3. Run `submit-brave-url` once per URL, sequentially, waiting for each result (each takes about 10-40 s). Stop the batch if a result is `rate_limited`, `busy` or `verification_required`.
-4. Ask the user for the contact email address they want Viesearch to have. Then run `submit-viesearch-url` once per URL with `contactEmail` set to it, sequentially, waiting for each result. The email goes only to Viesearch: never store it, repeat it, or put it in any other field. If a result says `verification_required`, tell the user to finish at https://viesearch.com/submit instead. `rejected` with "already a registered user" means the URL is already in Viesearch.
+4. Ask the user for the contact email address they want Viesearch to have. Then run `submit-viesearch-url` once per URL with `contactEmail` set to it, sequentially, waiting for each result. The email goes only to Viesearch: never store it, repeat it, or put it in any other field. Every Viesearch result also reminds the user to check their inbox for Viesearch's Confirm Submission email: the site enters their review queue only after they click it — pass that reminder on. If a result says `verification_required`, tell the user to finish at https://viesearch.com/submit instead. `rejected` with "already a registered user" means the URL is already in Viesearch.
 5. Summarise per URL with the status each tool gave.
 
 ## When the user wants to review or configure visually
