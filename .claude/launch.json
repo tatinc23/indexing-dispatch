@@ -4,8 +4,24 @@
     {
       "name": "canvas-harness",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "--config", "harness/canvas/vite.config.ts"],
+      "runtimeArgs": [
+        "vite",
+        "--config",
+        "harness/canvas/vite.config.ts"
+      ],
       "port": 5199
+    },
+    {
+      "name": "site-dist",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5201",
+        "--directory",
+        "dist-site"
+      ],
+      "port": 5201
     }
   ]
 }

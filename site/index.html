@@ -66,6 +66,7 @@
           <details class="how" id="connect">
             <summary><svg class="chev" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M5 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Show me how, for my app</summary>
             <div class="apps">
+            <p class="note">Chat apps (claude.ai, ChatGPT, the Gemini app) keep their click-by-click steps below, because an AI can&rsquo;t add a connector to itself there. Coding agents get one command each.</p>
             <details class="app" open>
               <summary><h3>Claude</h3><span class="where">claude.ai, Claude Desktop, Claude Code</span></summary>
               <div class="app-body">
@@ -99,10 +100,19 @@ url = "{{MCP_URL}}"</code></pre></div>
             <details class="app">
               <summary><h3>Cursor</h3><span class="where">mcp.json</span></summary>
               <div class="app-body">
-                <p class="note">Add this to <code>~/.cursor/mcp.json</code> to use it in every project, or to <code>.cursor/mcp.json</code> for one project. If the file already has servers, add the indexing-dispatch entry inside the existing <code>mcpServers</code>.</p>
+                <p class="note">One click does it: <a class="btn" href="{{CURSOR_LINK}}">Add to Cursor</a></p>
+                <p class="note">Or add this to <code>~/.cursor/mcp.json</code> to use it in every project, or to <code>.cursor/mcp.json</code> for one project. If the file already has servers, add the indexing-dispatch entry inside the existing <code>mcpServers</code>.</p>
                 <div class="snip"><div class="snip-bar"><span id="snip-cursor-l">mcp.json</span><button type="button" class="copy-snip" data-copy="snip-cursor" hidden aria-describedby="snip-cursor-l">Copy</button></div><pre id="snip-cursor" tabindex="0" aria-labelledby="snip-cursor-l"><code>{ "mcpServers": { "indexing-dispatch": { "url": "{{MCP_URL}}" } } }</code></pre></div>
                 <p class="note">You can then turn it on or off from the <b>Customize</b> page in Cursor&rsquo;s sidebar.</p>
                 <p class="src"><a href="https://cursor.com/docs/context/mcp">Cursor&rsquo;s guide</a></p>
+              </div>
+            </details>
+            <details class="app">
+              <summary><h3>Antigravity</h3><span class="where">agy CLI</span></summary>
+              <div class="app-body">
+                <p class="note"><b>Terminal:</b> run this, then <code>agy mcp list</code> to check it&rsquo;s there. Syntax from the docs; not run on this Mac yet.</p>
+                <div class="snip"><div class="snip-bar"><span id="snip-agy-l">Terminal</span><button type="button" class="copy-snip" data-copy="snip-agy" hidden aria-describedby="snip-agy-l">Copy</button></div><pre id="snip-agy" tabindex="0" aria-labelledby="snip-agy-l"><code>agy mcp add indexing-dispatch {{MCP_URL}}</code></pre></div>
+                <p class="src"><a href="https://developer.mescius.com/mcp/docs/configure-your-ai-client/command-line-clients/google-antigravity-cli">agy setup guide</a></p>
               </div>
             </details>
             <details class="app">
@@ -123,6 +133,10 @@ url = "{{MCP_URL}}"</code></pre></div>
                 <p class="src"><a href="https://help.openai.com/en/articles/12584461">OpenAI&rsquo;s guide</a></p>
               </div>
             </details>
+            <div class="app-body">
+              <p class="note"><b>Any other agent app:</b> paste this at its prompt.</p>
+              <div class="snip"><div class="snip-bar"><span id="snip-agent-l">Prompt</span><button type="button" class="copy-snip" data-copy="snip-agent" hidden aria-describedby="snip-agent-l">Copy</button></div><pre id="snip-agent" tabindex="0" aria-labelledby="snip-agent-l"><code>Add the MCP server {{MCP_URL}} as indexing-dispatch, then list its tools.</code></pre></div>
+            </div>
           </div>
           </details>
         </div>

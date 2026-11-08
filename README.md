@@ -115,11 +115,13 @@ Chromium runs with its sandbox on. `BRAVE_SUBMITTER_NO_SANDBOX=1` adds `--no-san
 - **Client config:**
   ```bash
   claude mcp add --transport http indexing-dispatch https://dispatch-mcp.tatinc.us/mcp
+  codex mcp add indexing-dispatch --url https://dispatch-mcp.tatinc.us/mcp
+  agy mcp add indexing-dispatch https://dispatch-mcp.tatinc.us/mcp
   ```
   ```json
   { "mcpServers": { "indexing-dispatch": { "type": "http", "url": "https://dispatch-mcp.tatinc.us/mcp" } } }
   ```
-  Step-by-step setup for Claude, Codex, Cursor and ChatGPT: `docs/connect-steps.md`.
+  Step-by-step setup for Claude, Codex, Cursor, Antigravity and ChatGPT: `docs/connect-steps.md` (the landing page has one-click setup for Cursor).
 - **Deploy your own:** `CLOUDFLARE_ACCOUNT_ID=<your account id> npm run deploy:worker` (builds the inline canvas with `scripts/build-worker.mjs`, then `wrangler deploy` from `deploy/mcp/`). Type-check with `npm run typecheck:worker`.
 - **Node build:** the same tools also run as a plain Node server (see Self-hosting); on Node the limits are per process.
 

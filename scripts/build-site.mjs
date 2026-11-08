@@ -7,6 +7,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statS
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderMorePlacesPage } from "./more-places.mjs";
+import { cursorInstallLink } from "./cursor-link.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const siteDir = join(root, "site");
@@ -17,6 +18,7 @@ const SITE_URL = (process.env.SITE_URL || "https://dispatch.tatinc.us").trim().r
 for (const [k, v] of [["MCP_URL", MCP_URL], ["SITE_URL", SITE_URL]]) {
   if (!/^https:\/\/[^\s{}"'<>]+$/.test(v)) fail(`${k} must be an https URL without spaces, braces or quotes (got "${v}")`);
 }
+const CURSOR_LINK = cursorInstallLink(MCP_URL);
 
 const ALLOWED_EXT = new Set([".html", ".css", ".js", ".svg", ".png", ".ico", ".woff2", ".txt", ".json", ".xml"]);
 const TEXT_EXT = new Set([".html", ".css", ".js", ".txt", ".xml", ".json"]); // placeholders are replaced here
@@ -32,7 +34,7 @@ function fail(msg) {
   process.exit(1);
 }
 
-const fill = (s) => s.replaceAll("{{MCP_URL}}", MCP_URL).replaceAll("{{SITE_URL}}", SITE_URL);
+const fill = (s) => s.replaceAll("{{MCP_URL}}", MCP_URL).replaceAll("{{SITE_URL}}", SITE_URL).replaceAll("{{CURSOR_LINK}}", CURSOR_LINK);
 
 function copyTree(srcDir, destDir, top) {
   for (const name of readdirSync(srcDir)) {
