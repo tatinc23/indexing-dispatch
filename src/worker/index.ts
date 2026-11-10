@@ -9,10 +9,10 @@ import { MCPServer, registerViews, type ViewsManifest } from "mcp-use";
 import { auditSite } from "../audit.js";
 import type { CanvasProps, ViesearchResult } from "../contract.js";
 import { auditToolResult, viesearchToolResult } from "../discovery-format.js";
-import { toToolResult } from "../format.js";
+import { MORE_PLACES_PATH, toToolResult } from "../format.js";
 import { bearerMatches, dedupeKey } from "../guard.js";
 import type { BudgetKind, LedgerDenied, LedgerGranted } from "../limits.js";
-import { SERVER_INFO, auditDenied, auditSiteDef, braveDenied, checkMySitePromptDef, checkMySitePromptSchema, checkMySitePromptText, renderSubmissionCanvasDef, submitBraveUrlDef, submitMySitePromptDef, submitMySitePromptSchema, submitMySitePromptText, submitViesearchUrlDef, viesearchDenied } from "../tool-defs.js";
+import { SERVER_INFO, auditDenied, plausibleEmail, auditSiteDef, braveDenied, checkMySitePromptDef, checkMySitePromptSchema, checkMySitePromptText, renderSubmissionCanvasDef, submitBraveUrlDef, submitMySitePromptDef, submitMySitePromptSchema, submitMySitePromptText, submitViesearchUrlDef, viesearchDenied } from "../tool-defs.js";
 import { submitViaBrowserRun } from "./brave-browser-run.js";
 import { submitViaViesearchRun } from "./viesearch-browser-run.js";
 import manifestTemplate from "../../site/mcp.json";
@@ -127,12 +127,14 @@ export const auditSiteTool = server.tool(auditSiteDef, async ({ targetUrl, strat
   }
 });
 
-export const renderSubmissionCanvas = server.tool(renderSubmissionCanvasDef, async ({ urls, domain, mode }) => {
+export const renderSubmissionCanvas = server.tool(renderSubmissionCanvasDef, async ({ urls, domain, mode, email }) => {
   const props: CanvasProps = {
     initialUrls: urls ?? [],
     ...(domain ? { domain } : {}),
     mode: mode ?? "interactive",
     enabledTools: { cloudflare: false, pageSpeed: Boolean(cfg.PAGESPEED_API_KEY?.trim()) },
+    morePlacesUrl: `${SERVER_INFO.websiteUrl}${MORE_PLACES_PATH}`,
+    ...(plausibleEmail(email) ? { initialEmail: email!.trim() } : {}),
   };
   return { content: [{ type: "text", text: "Canvas opened." }], structuredContent: props };
 });

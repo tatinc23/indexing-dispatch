@@ -78,11 +78,12 @@ export const renderSubmissionCanvasDef = {
     name: "render-submission-canvas",
     title: "Open the submission canvas",
     description:
-      "Opens the Indexing Dispatch panel (an interactive MCP App view) inside the chat. In the panel the person enters or reviews page URLs and (for Viesearch) their contact email, chooses which tools to run (Brave submission, Viesearch submission, site audit, plus PageSpeed only when this server has a key), presses Initiate run, and copies the results. Opening the panel sends nothing and checks nothing: the panel calls the other tools only when the person presses run. Needs a host that can show MCP App views; other hosts show only the short text reply. The reply echoes the panel's starting settings.",
+      "Opens the Indexing Dispatch panel (an interactive MCP App view) inside the chat. Use when the person asks to open the panel or form, e.g. 'open the submission panel for example.com, my email is me@example.com': pass the site in `urls` (bare domains are fine) and their email in `email`. In the panel the person enters or reviews page URLs and (for Viesearch) their contact email, chooses which tools to run (Brave submission, Viesearch submission, site audit, plus PageSpeed only when this server has a key), presses Initiate run, and copies the results. Opening the panel sends nothing and checks nothing: the panel calls the other tools only when the person presses run. Needs a host that can show MCP App views; other hosts show only the short text reply. The reply echoes the panel's starting settings.",
     inputSchema: z.object({
       urls: z.array(z.string()).optional().describe("Page URLs to pre-fill in the panel's URL box, one per line (for example https://example.com/new-page). Optional; the person can edit or add URLs in the panel."),
       domain: z.string().optional().describe("A site address such as example.com, used only when `urls` is empty: the box is pre-filled with https://<domain>/. Optional."),
       mode: z.enum(["interactive", "autonomous"]).optional().describe("Defaults to interactive. `autonomous` only shows a note that it was requested; the panel still waits for the person to press Initiate run."),
+      email: z.string().trim().max(254).optional().describe("The person's own contact email for Viesearch, to pre-fill the panel's email box. Pass it only when the person gave it in this chat; never invent one. Nothing is sent until they press Initiate run."),
     }),
     outputSchema: canvasPropsSchema,
     view: { name: "render-submission-canvas", description: "Submission canvas" },
@@ -177,3 +178,8 @@ export function auditDenied(targetUrl: string, gate: { message: string; retryAft
 }
 
 
+
+/** Light shape check before pre-filling the panel's email box; the panel and the Viesearch tool validate again. */
+export function plausibleEmail(v: string | undefined): boolean {
+  return typeof v === "string" && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.trim()) && v.trim().length <= 254;
+}

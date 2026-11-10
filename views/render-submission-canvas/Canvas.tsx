@@ -251,7 +251,7 @@ export function Canvas({ props, runner }: { props: CanvasProps; runner: Runner }
   const [urlText, setUrlText] = useState(() => initialUrlText(props));
   const [included, setIncluded] = useState<Record<ToolId, boolean>>({ brave: true, viesearch: true, audit: true, cloudflare: false });
   const [viewing, setViewing] = useState<ToolId>("brave");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => props.initialEmail ?? "");
   const [zoneId, setZoneId] = useState("");
   const [strategy, setStrategy] = useState<"mobile" | "desktop">("mobile");
 

@@ -277,3 +277,11 @@ describe("suggested files bundle", () => {
     assert.equal(suggestedFilesBundle([{ path: "/llms.txt", content: "# A\n" }, { path: "/robots.txt (append)", content: "User-agent: GPTBot" }]), "# /llms.txt\n# A\n\n# /robots.txt (append)\nUser-agent: GPTBot\n");
   });
 });
+
+import { parseUrlList as _parse } from "../views/render-submission-canvas/lib.js";
+it("panel accepts bare domains like the server does", () => {
+  assert.deepEqual(_parse("jordy.tatinc.us").urls, ["https://jordy.tatinc.us"]);
+  assert.deepEqual(_parse("a.com:8080/x").urls, ["https://a.com:8080/x"]);
+  assert.equal(_parse("javascript:alert(1)").urls.length, 0);
+  assert.equal(_parse("localhost").urls.length, 0);
+});

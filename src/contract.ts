@@ -144,5 +144,6 @@ export const canvasPropsSchema = z.object({
     pageSpeed: z.boolean().describe("True only if this server has a PageSpeed key, so audits include a PageSpeed result."),
   }).describe("Which optional tools this server instance really has."), // what this server instance really has
   morePlacesUrl: z.string().optional().describe("Absolute URL of the static more-places page (directories no agent can submit to)."),
+  initialEmail: z.string().optional().describe("The person's own email for Viesearch, pre-filled in the panel's email box (only when they gave it)."),
 });
 export type CanvasProps = z.infer<typeof canvasPropsSchema>;

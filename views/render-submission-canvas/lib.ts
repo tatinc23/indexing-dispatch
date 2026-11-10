@@ -63,6 +63,15 @@ export function urlProblem(value: string): string | null {
   return null;
 }
 
+/** Same rule as the server's normalizeTargetUrl: a bare domain ("example.com", "example.com:8080/x") gets https://. */
+export function normalizeUrl(raw: string): string {
+  const t = raw.trim();
+  if (!t) return t;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t)) return t;
+  if (/^(javascript|data|mailto|file|vbscript|about|blob|tel|ftp):/i.test(t)) return t;
+  return `https://${t}`;
+}
+
 export function parseUrlList(text: string): ParsedUrls {
   const urls: string[] = [];
   const problems: UrlProblem[] = [];
@@ -71,11 +80,12 @@ export function parseUrlList(text: string): ParsedUrls {
   text.split(/\r?\n/).forEach((raw, i) => {
     // allow commas and spaces between URLs on one line
     for (const part of raw.split(/[\s,]+/)) {
-      const value = part.trim();
-      if (!value) continue;
+      const typed = part.trim();
+      if (!typed) continue;
+      const value = normalizeUrl(typed);
       const reason = urlProblem(value);
       if (reason) {
-        problems.push({ line: i + 1, value, reason });
+        problems.push({ line: i + 1, value: typed, reason });
       } else if (seen.has(value)) {
         duplicates += 1;
       } else {

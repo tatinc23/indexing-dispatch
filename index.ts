@@ -5,7 +5,7 @@ import { parseAllowedZones, snapshotCloudflareBaseline, zoneAllowed } from "./sr
 import { auditResultSchema, canvasPropsSchema, cloudflareBaselineSchema, viesearchResultSchema, type AuditResult, type CanvasProps, type ViesearchResult } from "./src/contract.js";
 import { auditToolResult, cloudflareToolResult, viesearchToolResult } from "./src/discovery-format.js";
 import { MORE_PLACES_PATH, toToolResult } from "./src/format.js";
-import { SERVER_INFO, auditSiteDef, checkMySitePromptDef, checkMySitePromptSchema, checkMySitePromptText, renderSubmissionCanvasDef, submitBraveUrlDef, submitMySitePromptDef, submitMySitePromptSchema, submitMySitePromptText, submitViesearchUrlDef } from "./src/tool-defs.js";
+import { SERVER_INFO, auditSiteDef, plausibleEmail, checkMySitePromptDef, checkMySitePromptSchema, checkMySitePromptText, renderSubmissionCanvasDef, submitBraveUrlDef, submitMySitePromptDef, submitMySitePromptSchema, submitMySitePromptText, submitViesearchUrlDef } from "./src/tool-defs.js";
 import { SubmissionGuard, bearerMatches, configFromEnv, dedupeKey } from "./src/guard.js";
 import { inputSchema, resultSchema, type SubmitResult } from "./src/schema.js";
 import { runBrowserSelfCheck } from "./src/selfcheck.js";
@@ -188,13 +188,14 @@ if (cloudflareConfigured) {
 
 export const renderSubmissionCanvas = server.tool(
   renderSubmissionCanvasDef,
-  async ({ urls, domain, mode }) => {
+  async ({ urls, domain, mode, email }) => {
     const props: CanvasProps = {
       initialUrls: urls ?? [],
       ...(domain ? { domain } : {}),
       mode: mode ?? "interactive",
       enabledTools: { cloudflare: cloudflareConfigured, pageSpeed: Boolean(process.env.PAGESPEED_API_KEY?.trim()) },
       morePlacesUrl: `${SERVER_INFO.websiteUrl}${MORE_PLACES_PATH}`,
+      ...(plausibleEmail(email) ? { initialEmail: email!.trim() } : {}),
     };
     return { content: [{ type: "text", text: "Canvas opened." }], structuredContent: props };
   },

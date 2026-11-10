@@ -85,3 +85,14 @@ describe("bare domains in audit-site", () => {
     assert.ok(seen[0]?.startsWith("https://example.com"), seen[0]);
   });
 });
+
+import { plausibleEmail, renderSubmissionCanvasDef as _canvasDef } from "../src/tool-defs.js";
+import { canvasPropsSchema as _props } from "../src/contract.js";
+it("panel email prefill: shape check, optional input, carried in props", () => {
+  assert.equal(plausibleEmail("emailme@tatinc.us"), true);
+  assert.equal(plausibleEmail("  a@b.co  "), true);
+  for (const bad of [undefined, "", "nope", "a@b", "a b@c.d", "x".repeat(250) + "@a.io"]) assert.equal(plausibleEmail(bad as string | undefined), false);
+  assert.equal(_canvasDef.inputSchema.safeParse({ urls: ["https://a.com/"] }).success, true);
+  assert.equal(_canvasDef.inputSchema.safeParse({ urls: ["https://a.com/"], email: "me@a.com" }).success, true);
+  assert.equal(_props.safeParse({ initialUrls: [], mode: "interactive", enabledTools: { cloudflare: false, pageSpeed: false }, initialEmail: "me@a.com" }).success, true);
+});
