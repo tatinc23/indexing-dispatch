@@ -5,7 +5,7 @@ import { parseAllowedZones, snapshotCloudflareBaseline, zoneAllowed } from "./sr
 import { auditResultSchema, canvasPropsSchema, cloudflareBaselineSchema, viesearchResultSchema, type AuditResult, type CanvasProps, type ViesearchResult } from "./src/contract.js";
 import { auditToolResult, cloudflareToolResult, viesearchToolResult } from "./src/discovery-format.js";
 import { MORE_PLACES_PATH, toToolResult } from "./src/format.js";
-import { SERVER_INFO, auditSiteDef, renderSubmissionCanvasDef, submitBraveUrlDef, submitViesearchUrlDef } from "./src/tool-defs.js";
+import { SERVER_INFO, auditSiteDef, checkMySitePromptDef, checkMySitePromptSchema, checkMySitePromptText, renderSubmissionCanvasDef, submitBraveUrlDef, submitMySitePromptDef, submitMySitePromptSchema, submitMySitePromptText, submitViesearchUrlDef } from "./src/tool-defs.js";
 import { SubmissionGuard, bearerMatches, configFromEnv, dedupeKey } from "./src/guard.js";
 import { inputSchema, resultSchema, type SubmitResult } from "./src/schema.js";
 import { runBrowserSelfCheck } from "./src/selfcheck.js";
@@ -199,6 +199,14 @@ export const renderSubmissionCanvas = server.tool(
     return { content: [{ type: "text", text: "Canvas opened." }], structuredContent: props };
   },
 );
+
+export const submitMySitePrompt = server.prompt({ ...submitMySitePromptDef, schema: submitMySitePromptSchema }, async ({ url, email }) => ({
+  messages: [{ role: "user" as const, content: { type: "text" as const, text: submitMySitePromptText(url, email?.trim() ? email.trim() : undefined) } }],
+}));
+
+export const checkMySitePrompt = server.prompt({ ...checkMySitePromptDef, schema: checkMySitePromptSchema }, async ({ url }) => ({
+  messages: [{ role: "user" as const, content: { type: "text" as const, text: checkMySitePromptText(url) } }],
+}));
 
 // Boot-time Chromium check (logs only, never contacts Brave). Skipped during `mcp-use build`; disable with BRAVE_SUBMITTER_SELFCHECK=0.
 if (!isBuilding() && process.env.BRAVE_SUBMITTER_SELFCHECK !== "0") void runBrowserSelfCheck();

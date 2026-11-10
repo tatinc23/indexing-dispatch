@@ -1,7 +1,7 @@
 // audit-site engine. Every value in the result is read from a response we actually received; nothing is estimated,
 // defaulted or invented. All outbound requests go through safeFetch (SSRF guard).
 import type { AuditResult } from "./contract.js";
-import { urlProblem } from "./schema.js";
+import { normalizeTargetUrl, urlProblem } from "./schema.js";
 // "#safe-fetch" resolves to the Node guard (src/safe-fetch.ts) or, under the "workerd" condition, the Workers guard (package.json "imports").
 import { safeFetch as realSafeFetch } from "#safe-fetch";
 import type { SafeFetchOptions, SafeFetchResult } from "./safe-fetch-core.js";
@@ -425,7 +425,7 @@ export async function auditSite(input: { targetUrl: string; strategy?: "mobile" 
   const fetchFn = deps.safeFetch ?? ((url, opts) => realSafeFetch(url, opts));
   const env = deps.env ?? process.env;
   const started = now();
-  const targetUrl = input.targetUrl.trim();
+  const targetUrl = normalizeTargetUrl(input.targetUrl);
   const strategy = input.strategy ?? "mobile";
   const stop = (status: AuditResult["status"], message: string): AuditResult => ({ status, targetUrl, message, findings: [], suggestedFiles: [], durationMs: now() - started });
 

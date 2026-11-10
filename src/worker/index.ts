@@ -12,7 +12,7 @@ import { auditToolResult, viesearchToolResult } from "../discovery-format.js";
 import { toToolResult } from "../format.js";
 import { bearerMatches, dedupeKey } from "../guard.js";
 import type { BudgetKind, LedgerDenied, LedgerGranted } from "../limits.js";
-import { SERVER_INFO, auditDenied, auditSiteDef, braveDenied, renderSubmissionCanvasDef, submitBraveUrlDef, submitViesearchUrlDef, viesearchDenied } from "../tool-defs.js";
+import { SERVER_INFO, auditDenied, auditSiteDef, braveDenied, checkMySitePromptDef, checkMySitePromptSchema, checkMySitePromptText, renderSubmissionCanvasDef, submitBraveUrlDef, submitMySitePromptDef, submitMySitePromptSchema, submitMySitePromptText, submitViesearchUrlDef, viesearchDenied } from "../tool-defs.js";
 import { submitViaBrowserRun } from "./brave-browser-run.js";
 import { submitViaViesearchRun } from "./viesearch-browser-run.js";
 import manifestTemplate from "../../site/mcp.json";
@@ -136,6 +136,14 @@ export const renderSubmissionCanvas = server.tool(renderSubmissionCanvasDef, asy
   };
   return { content: [{ type: "text", text: "Canvas opened." }], structuredContent: props };
 });
+
+export const submitMySitePrompt = server.prompt({ ...submitMySitePromptDef, schema: submitMySitePromptSchema }, async ({ url, email }) => ({
+  messages: [{ role: "user" as const, content: { type: "text" as const, text: submitMySitePromptText(url, email?.trim() ? email.trim() : undefined) } }],
+}));
+
+export const checkMySitePrompt = server.prompt({ ...checkMySitePromptDef, schema: checkMySitePromptSchema }, async ({ url }) => ({
+  messages: [{ role: "user" as const, content: { type: "text" as const, text: checkMySitePromptText(url) } }],
+}));
 
 // ---- HTTP surface: only the MCP endpoint, a tiny info document at GET /, and 404 for everything else. --------------
 

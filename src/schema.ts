@@ -48,19 +48,39 @@ export function urlProblem(value: string): string | null {
   return null;
 }
 
-export const targetUrlSchema = z
-  .string()
-  .trim()
-  .min(1, "targetUrl is required")
-  .max(MAX_URL_LENGTH, `targetUrl must be at most ${MAX_URL_LENGTH} characters`)
-  .superRefine((value, ctx) => {
-    const problem = urlProblem(value);
-    if (problem) ctx.addIssue({ code: "custom", message: `targetUrl ${problem}` });
-  });
+/**
+ * Bare domains are accepted and normalized to https://.
+ * `mashcribs.com` or `www.x.com/page` becomes `https://...`. An explicit
+ * `http://` stays as-is. Anything with another scheme (ftp:, javascript:, ...)
+ * is left untouched so the existing checks still reject it. The SSRF guard
+ * (`urlProblem`) and every other check runs unchanged on the normalized value.
+ */
+export function normalizeTargetUrl(raw: string): string {
+  const t = raw.trim();
+  if (!t) return t;
+  // A real scheme ("https://", "ftp://") or a known non-URL scheme ("javascript:", "mailto:") is left as-is so the
+  // checks below reject it. "host:port" (e.g. "mashcribs.com:8080") is NOT a scheme and gets https://.
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(t)) return t;
+  if (/^(javascript|data|mailto|file|vbscript|about|blob|tel|ftp):/i.test(t)) return t;
+  return `https://${t}`;
+}
+
+export const targetUrlSchema = z.preprocess(
+  (v) => (typeof v === "string" ? normalizeTargetUrl(v) : v),
+  z
+    .string()
+    .trim()
+    .min(1, "targetUrl is required")
+    .max(MAX_URL_LENGTH, `targetUrl must be at most ${MAX_URL_LENGTH} characters`)
+    .superRefine((value, ctx) => {
+      const problem = urlProblem(value);
+      if (problem) ctx.addIssue({ code: "custom", message: `targetUrl ${problem}` });
+    }),
+);
 
 export const inputSchema = z.object({
   targetUrl: targetUrlSchema.describe(
-    "Absolute http(s) URL to submit to Brave Search for (re-)fetching, e.g. https://example.com/. No credentials in the URL; must be publicly reachable.",
+    "Absolute http(s) URL to submit to Brave Search for (re-)fetching, e.g. https://example.com/. Bare domains work and become https://. No credentials in the URL; must be publicly reachable.",
   ),
 });
 
